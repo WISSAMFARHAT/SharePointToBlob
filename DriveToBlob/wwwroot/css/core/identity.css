@@ -1,0 +1,43 @@
+header .header-user {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+}
+header .header-user img {
+  display: block;
+  width: auto;
+  height: auto;
+  min-width: 32px;
+  min-height: 32px;
+  max-width: 48px;
+  max-height: 48px;
+  border-radius: 50%;
+}
+.accountsidebar {
+  min-width: 40vw;
+}
+.accountsidebar > div {
+  padding: 20px;
+  padding-bottom: 0;
+  text-align: center;
+}
+.accountsidebar > div a {
+  display: inline-block;
+  padding: 10px 20px;
+}
+.accountsidebar .details {
+  opacity: 0.6;
+}
+.accountsidebar .profilepicture {
+  display: flex;
+  justify-content: center;
+  align-content: center;
+}
+.accountsidebar .profilepicture img {
+  max-width: 200px;
+  border-radius: 50%;
+  width: 100%;
+  height: auto;
+}

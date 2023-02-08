@@ -1,0 +1,57 @@
+﻿@model List<ItemModel>;
+@{
+    Html.Bundle("css/index.css");
+
+}
+
+<section>
+    <article class="sites">
+        <div class="sites-button">
+            @if (!string.IsNullOrEmpty(ViewData["FolderID"] as string))
+            {
+                <form action="@Url.Action("ToBlobStorage","Home")" method="post">
+                    @if (!string.IsNullOrEmpty(ViewData["Name"] as string))
+                    {
+                        <input type="hidden" name="name" value="@ViewData["Name"]" />
+                    }
+                    @if (!string.IsNullOrEmpty(ViewData["ID"] as string))
+                    {
+                        <input type="hidden" name="id" value="@ViewData["ID"]" />
+                    }
+                    @if (!string.IsNullOrEmpty(ViewData["ListID"] as string))
+                    {
+                        <input type="hidden" name="listID" value="@ViewData["ListID"]" />
+                    }
+                    @if (!string.IsNullOrEmpty(ViewData["FolderID"] as string))
+                    {
+                        <input type="hidden" name="folderID" value="@ViewData["FolderID"]" />
+                    }
+    
+                    <button type="submit" class="--button _secondary">Blob Storage</button>
+                </form>
+            }
+        </div>
+        <h1> @(string.IsNullOrEmpty(ViewData["Name"] as string) ? "Site" : ViewData["Name"]) </h1>
+        <div class="sites-info">
+            @foreach (ItemModel item in Model)
+            {
+                @if (!string.IsNullOrEmpty(item.Name))
+                {
+                    @if (string.IsNullOrEmpty(ViewData["Name"] as string))
+                    {
+                        <a href="/@item.Name/@item.Id" class="--button _primary">@item.Name</a>
+                    }
+                    else
+                    {
+                        string name = @ViewData["Url"] as string;
+                        int firstSlashIndex = name.IndexOf('/');
+                        int secondSlashIndex = name.IndexOf('/', firstSlashIndex + 1);
+                        name = name.Remove(secondSlashIndex, 1).Insert(secondSlashIndex, $"-{item.Name}/");
+
+                        <a href="@name/@item.Id" class="--button _primary">@item.Name</a>
+                    }
+                }
+            }
+        </div>
+    </article>
+</section>

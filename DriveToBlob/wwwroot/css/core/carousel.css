@@ -1,0 +1,163 @@
+.Selectable {
+  -webkit-touch-callout: initial;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+.UnSelectable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+.HorizontalScrolling {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+@keyframes FadeIn {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes FadeInLeft {
+  from {
+    opacity: 0.1;
+    -webkit-transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translateX(0);
+  }
+}
+@keyframes FadeInTop {
+  from {
+    opacity: 0.1;
+    -webkit-transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+  }
+}
+@keyframes AppearHeight {
+  from {
+    -webkit-transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    -webkit-transform: translateY(0);
+  }
+}
+.TransitionFaster {
+  -webkit-transition: all 0.1s ease;
+  -moz-transition: all 0.1s ease;
+  -o-transition: all 0.1s ease;
+  transition: all 0.1s ease;
+}
+.TransitionFast {
+  -webkit-transition: all 0.2s ease;
+  -moz-transition: all 0.2s ease;
+  -o-transition: all 0.2s ease;
+  transition: all 0.2s ease;
+}
+.TransitionMedium {
+  -webkit-transition: all 0.4s ease;
+  -moz-transition: all 0.4s ease;
+  -o-transition: all 0.4s ease;
+  transition: all 0.4s ease;
+}
+.TransitionSlow {
+  -webkit-transition: all 0.8s ease;
+  -moz-transition: all 0.8s ease;
+  -o-transition: all 0.8s ease;
+  transition: all 0.8s ease;
+}
+.carousel {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  width: 100vw;
+  height: 90vh;
+}
+.carousel-slide {
+  height: 90vh;
+}
+.carousel-slide > div {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  justify-content: center;
+}
+.carousel-slide > div img {
+  justify-self: center;
+  width: auto;
+  object-fit: contain;
+  max-height: 70vh;
+}
+.carousel-slide > div p {
+  bottom: 0;
+  margin: 0;
+  padding: 10px;
+  color: #fff;
+  text-align: center;
+}
+.carousel-header,
+.carousel-leftarrow,
+.carousel-rightarrow {
+  position: absolute;
+}
+.carousel-header span,
+.carousel-leftarrow span,
+.carousel-rightarrow span {
+  text-shadow: 1px 1px 5px #000;
+  color: #fff;
+  cursor: pointer !important;
+}
+.carousel-header._disabled,
+.carousel-leftarrow._disabled,
+.carousel-rightarrow._disabled {
+  opacity: 0.3;
+  text-shadow: unset;
+  pointer-events: none;
+}
+.carousel-header {
+  top: 0;
+  left: 0;
+  right: 0;
+  text-align: right;
+  z-index: 2;
+}
+.carousel-header span {
+  padding: 10px;
+  font-size: 2rem;
+}
+.carousel-leftarrow,
+.carousel-rightarrow {
+  top: 0;
+  bottom: 0;
+  display: flex;
+  z-index: 1;
+}
+.carousel-leftarrow span,
+.carousel-rightarrow span {
+  padding: 40px 15px;
+  font-size: 3rem;
+  display: inline-block;
+  align-self: center;
+}
+.carousel-leftarrow {
+  left: 0;
+}
+.carousel-rightarrow {
+  right: 0;
+}

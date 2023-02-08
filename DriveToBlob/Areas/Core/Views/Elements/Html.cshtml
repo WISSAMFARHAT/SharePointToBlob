@@ -1,0 +1,9 @@
+﻿@model string[]
+
+@foreach (string html in Model)
+{
+    if (html.EndsWith(".cshtml", StringComparison.OrdinalIgnoreCase))
+    {
+        <partial name="~/@html" />
+    }
+}

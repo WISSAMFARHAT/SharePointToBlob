@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>973135f6-7bff-4f13-9c1a-94b52bef6bcd</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AngryMonkey.Core.Config" Version="1.0.7" />
+    <PackageReference Include="AngryMonkey.Core.Web" Version="2.0.8" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="2.0.8-preview" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Connection\Connection.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,159 @@
+﻿@{
+	CorePage corePage = (CorePage)ViewData["CorePage"];
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+	<title>@corePage.Title</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<link rel="shortcut icon" href="~/favicon.ico" type="image/x-icon" />
+
+	@if (corePage.Description != null)
+	{
+		<meta name="description" content="@corePage.Description" />
+	}
+
+	@if (corePage.Keywords != null && corePage.Keywords.Count() > 0)	
+	{
+		<meta name="keywords" content="@string.Join(",", corePage.Keywords)" />
+	}
+
+	@if (!string.IsNullOrEmpty(corePage.RobotsMetadata))
+	{
+		<meta name="robots" content="@corePage.RobotsMetadata" />
+	}
+
+	@if (!string.IsNullOrEmpty(corePage.GoogleAnalyticsId))
+	{
+		if (corePage.GoogleAnalyticsId.ToUpper().StartsWith('G'))
+		{
+			<script async src="https://www.googletagmanager.com/gtag/js?id=@corePage.GoogleAnalyticsId"></script>
+			<script>
+				window.dataLayer = window.dataLayer || [];
+				function gtag(){dataLayer.push(arguments);}
+				gtag('js', new Date());
+
+				gtag('config', '@(corePage.GoogleAnalyticsId)');
+			</script>
+		}
+		else
+		{
+			<script>
+				window.ga = window.ga || function () { (ga.q = ga.q || []).push(arguments) }; ga.l = +new Date;
+				ga('create', 'UA-@(corePage.GoogleAnalyticsId)', 'auto');
+				ga('send', 'pageview');
+			</script>
+			<script async src='https://www.google-analytics.com/analytics.js'></script>
+		}
+	}
+
+	@if (IsSectionDefined("head"))
+	{
+		@RenderSection("head")
+	}
+	else if (corePage.HeadHtml != null)
+	{
+		<partial name="~/Areas/Core/Views/Elements/Html.cshtml" model="@corePage.HeadHtml" />
+	}
+
+	@if (IsSectionDefined("styles"))
+	{
+		@RenderSection("styles")
+	}
+
+	@* Styles *@
+
+	@foreach (string style in corePage.Styles)
+	{
+		if (style.StartsWith("http"))
+		{
+			<link href="@style" rel="stylesheet" />
+		}
+		else if (env.EnvironmentName.Equals("Development", StringComparison.OrdinalIgnoreCase))
+		{
+			<link href="@Url.Content($"{style}.css")" rel="stylesheet" />
+		}
+		else
+		{
+			<link href="@Url.Content($"{style}.min.css")" rel="stylesheet" asp-append-version="true" />
+		}
+	}
+
+	@RenderSection("Styles", false)
+
+	<script crossorigin="anonymous" src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" defer></script>
+
+	<script defer>var exports = {};</script>
+
+	@if (corePage.HasEditor)
+	{
+		<script src="https://cdn.tiny.cloud/1/f8trq6j2jvxse0u7va7inyvimycrrvdcxal44jh8smq4op5p/tinymce/5/tinymce.min.js" crossorigin="anonymous" defer=""></script>
+	}
+
+	@if (IsSectionDefined("scripts"))
+	{
+		@RenderSection("scripts")
+	}
+
+	@* Scripts *@
+
+	@foreach (string script in corePage.Scripts)
+	{
+		if (script.StartsWith("http"))
+		{
+			<script src="@script" crossorigin="anonymous" defer></script>
+		}
+		else if (env.EnvironmentName.Equals("Development", StringComparison.OrdinalIgnoreCase))
+		{
+			<script src="@Url.Content($"{script}.js")" defer></script>
+		}
+		else
+		{
+			<script src="@Url.Content($"{script}.min.js")" asp-append-version="true" defer></script>
+		}
+	}
+
+	@RenderSection("Scripts", false)
+</head>
+<body>
+
+	@if (IsSectionDefined("header"))
+	{
+		@RenderSection("header")
+	}
+	else if (corePage.HeaderHtml != null)
+	{
+		<partial name="~/Areas/Core/Views/Elements/Html.cshtml" model="@corePage.HeaderHtml" />
+	}
+
+	<div id="sidemenu-hidden">
+		@if (IsSectionDefined("sidemenu"))
+		{
+			@RenderSection("sidemenu")
+		}
+		else if (corePage.SidemenuHtml != null)
+		{
+			<partial name="~/Areas/Core/Views/Elements/Html.cshtml" model="@corePage.SidemenuHtml" />
+		}
+	</div>
+
+	<main>
+		@RenderBody()
+	</main>
+
+	@if (IsSectionDefined("footer"))
+	{
+		@RenderSection("footer")
+	}
+	else if (corePage.FooterHtml != null)
+	{
+		<partial name="~/Areas/Core/Views/Elements/Html.cshtml" model="@corePage.FooterHtml" />
+	}
+
+</body>
+</html>

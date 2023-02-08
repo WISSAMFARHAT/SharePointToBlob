@@ -1,0 +1,230 @@
+﻿@import "variable.less";
+
+footer {
+    background-color: var(--primaryColor);
+    position: relative;
+
+    .footer {
+        display: flex;
+        justify-content: flex-start;
+        align-items: start;
+        padding-inline: 40px;
+        z-index: 10;
+        position: relative;
+        column-gap: 10%;
+        overflow: hidden;
+
+        &-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 50%;
+            margin-left: 10%;
+            padding-block: 20px;
+
+
+            > div {
+                padding: 20px;
+            }
+
+            &-top {
+                width: 100%;
+                display: flex;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 20px;
+                border-bottom: 2px solid var(--secondaryColor);
+
+                &-information {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 10px;
+
+                    a {
+                        width: 150px;
+                        transition: all var(--duration);
+
+                        svg {
+                            width: 100%;
+
+                            .--amc-fill {
+                                fill: var(--whiteColor);
+                            }
+                        }
+
+                        &:hover {
+                            color: var(--secondaryColor);
+                        }
+                    }
+                }
+
+                &-links {
+                    display: flex;
+                    text-decoration: none;
+                    width: 100%;
+                    gap: 20px;
+                    flex-wrap: wrap;
+                    list-style: none;
+
+                    li {
+                        width: 29%;
+
+                        a {
+                            display: block;
+                            width: 100%;
+                            font-size: 1rem;
+                            color: var(--whiteColor);
+                            transition: all var(--duration);
+                            &:hover{
+                                color:var(--secondaryColor);
+                            }
+                        }
+
+                        &:last-child {
+                            width: 45%;
+                        }
+                    }
+                }
+            }
+
+            &-bottom {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+                width: 100%;
+
+                > div {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    width: 100%;
+
+                    a {
+                        color: var(--whiteColor);
+                        width: auto;
+                        transition: all var(--duration);
+
+                        svg {
+                            width: 50px;
+
+                            .--svg-fill-background {
+                                fill: transparent;
+                                stroke:none;
+                            }
+
+                            .--svg-fill {
+                                fill: var(--whiteColor);
+                                transition: all var(--duration);
+                            }
+                        }
+
+                        &:hover {
+                            color: var(--secondaryColor);
+
+                            svg {
+                                .--svg-fill {
+                                    fill: var(--secondaryColor);
+                                }
+                            }
+                        }
+                    }
+
+                    .socialMedia {
+                        display: flex;
+                        align-items: stretch;
+                        gap: 5px;
+                    }
+
+                    span {
+                        font-size: 1.2rem;
+                        color: var(--whiteColor);
+
+                        a {
+                            font-size: 1rem;
+                            font-weight: bold;
+                            transition: all var(--duration);
+
+                            &:hover {
+                                color: var(--secondaryColor);
+                            }
+                        }
+                    }
+
+                    &:last-child {
+                        justify-content: center;
+                    }
+                }
+            }
+        }
+
+        &-right {
+            display: flex;
+            flex-direction: column;
+            align-content: flex-start;
+            gap: 20px;
+            width: 30%;
+            position: relative;
+            justify-content: end;
+            align-items: baseline;
+            padding-left: 10%;
+            padding-block: 20px;
+
+            span {
+                color: var(--whiteColor);
+                font-size: 2rem;
+                font-weight: bold;
+            }
+
+            > div {
+                display: flex;
+                gap: 20px;
+                align-items: center;
+
+                svg {
+                    width: 20px;
+                    fill: var(--whiteColor);
+
+                    .--svg-fill {
+                        fill: var(--whiteColor);
+                        stroke:none;
+                    }
+
+                    .--svg-stroke {
+                        stroke: transparent;
+                        fill:none;
+                    }
+                }
+
+                p, a {
+                    font-size: 1rem;
+                    color: var(--whiteColor);
+                    cursor:pointer;
+                }
+                a{
+                    transition:all var(--duration);
+                    &:hover{
+                        color:var(--primaryColorOpacity);
+                    }
+                }
+            }
+        }
+
+        .round {
+            position: absolute;
+            top: -100%;
+            right: -100%;
+            z-index: -1;
+            width: 200%;
+
+            svg {
+                width: 100%;
+
+                .--svg-fill {
+                    fill: var(--secondaryColor);
+                }
+            }
+        }
+    }
+}
