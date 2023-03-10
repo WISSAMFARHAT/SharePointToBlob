@@ -59,11 +59,11 @@ namespace DriveToBlob.Controllers
             try
             {
 
-                List<ItemModel> lisUrl = await Connection.GraphProvider.ShareGraph. GetAll(name.Replace("-","/"),id, listID, folderID);
+                List<ItemModel> lisUrl = await Connection.GraphProvider.ShareGraph.GetAll(name.Replace("-", "/"), id, listID, folderID);
 
                 foreach (ItemModel url in lisUrl)
                 {
-                    await Connection.GraphProvider.ShareGraph.SaveToBlob(id,listID, url);
+                    await Connection.GraphProvider.ShareGraph.SaveToBlob(id, listID, url);
                 }
 
                 //foreach (ItemModel url in lisUrl)

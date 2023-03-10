@@ -22,33 +22,18 @@ namespace Connection
         public BlobServiceClient BlobClient { get; set; }
         public BlobContainerClient AzureContainer { get; set; }
 
-        public BlobStorage(string connectionString) 
+        public BlobStorage(string connectionString)
         {
             BlobClient = new(connectionString);
             AzureContainer = BlobClient.GetBlobContainerClient("azre");
             AzureContainer.CreateIfNotExists();
         }
 
-      
-
         public async Task<FileModel> AddFile(FileModel file)
         {
-            try
-            {
-                await AzureContainer.UploadBlobAsync(file.Name, file.File);
+            await AzureContainer.UploadBlobAsync(file.Name, file.File);
 
-                return file;
-
-            }
-            catch (Exception e)
-            {
-                return null;
-            }
-
-
-        }   
-
-
-
+            return file;
+        }
     }
 }

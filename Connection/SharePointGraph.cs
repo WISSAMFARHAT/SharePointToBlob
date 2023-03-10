@@ -156,34 +156,30 @@ namespace Connection
             var folderContents = await _microsoft.Sites[id].Lists[listID].Drive.Items[folderId].Children.Request().GetAsync();
             List<ItemModel> items = new();
 
-
             foreach (var item in folderContents)
             {
                 string folder = $"{name}/";
 
                 if (item.Folder != null)
                 {
-                    
                     if (string.IsNullOrEmpty(folderName))
                         folder += item.Name;
                     else
                         folder += $"{folderName}/{item.Name}";
+
                     items.Add(new()
                     {
                         FolderName = folder,
-                        Items = await GetAll(id, listID, item.Id, folder)
+                        Items = await GetAll(folder, id, listID, item.Id)
                     });
                 }
                 else
-                {
                     items.Add(new()
                     {
                         Id = item.Id,
                         Name = string.IsNullOrEmpty(folderName) ? $"{folder}/{item.Name}" : $"{folderName}/{item.Name}",
                         WebUrl = item.WebUrl,
                     });
-
-                }
             }
 
             return items;
@@ -191,37 +187,23 @@ namespace Connection
 
         public async Task SaveToBlob(string id, string listID, ItemModel url)
         {
-            try
+            if (url.Items != null)
+                foreach (var item in url.Items)
+                    await SaveToBlob(id, listID, item);
+            else
             {
-                if (url.Items != null)
+                Stream wordFile = await _microsoft.Sites[id].Lists[listID].Drive.Items[url.Id].Content.Request().GetAsync();
+
+                FileModel file = new()
                 {
-                    foreach (var item in url.Items)
-                    {
-                        await SaveToBlob(id, listID, item);
-                    }
-                }
-                else
-                {
+                    File = wordFile,
+                    Name = url.Name
+                };
 
-                    Stream wordFile = await _microsoft.Sites[id].Lists[listID].Drive.Items[url.Id].Content.Request().GetAsync();
-
-                    FileModel file = new()
-                    {
-                        File = wordFile,
-                        Name = url.Name
-                    };
-
-                    await GraphProvider.Blobstroage.AddFile(file);
-                }
-
+                await GraphProvider.Blobstroage.AddFile(file);
             }
-
-            catch (Exception ex)
-            {
-
-            }
-
         }
+
         public async Task DeleteToBlob(string id, string listID, ItemModel url)
         {
             try
