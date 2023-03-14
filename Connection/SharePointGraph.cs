@@ -191,23 +191,23 @@ namespace Connection
 
         public async Task SaveDelete(string ID, string listID, ItemModel item, bool overwrite)
         {
-            if (!string.IsNullOrEmpty(item.ID))
-            {
-                Stream file = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Content.Request().GetAsync();
-
-                FileModel fileModel = new()
-                {
-                    File = file,
-                    Name = item.Name
-                };
-
-                if (await GraphProvider.FileStorage.AddFile(fileModel, overwrite))
-                    await Delete(ID, listID, item.ID);
-            }
-            else
+            // If Folder
+            if (string.IsNullOrEmpty(item.ID))
             {
                 await DeleteSubFolderEmpty(ID, listID, item.FolderID);
+                return;
             }
+
+            Stream file = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Content.Request().GetAsync();
+
+            FileModel fileModel = new()
+            {
+                File = file,
+                Name = item.Name
+            };
+
+            if (await GraphProvider.FileStorage.AddFile(fileModel, overwrite))
+                await Delete(ID, listID, item.ID);
         }
 
         public async Task Delete(string ID, string listID, string itemID) =>

@@ -56,27 +56,22 @@ namespace Connection
                     nextDirectory.CreateIfNotExists();
 
                     parrantDirectory = nextDirectory;
-
                 }
 
-                if (await parrantDirectory.ExistsAsync())
+                await parrantDirectory.CreateIfNotExistsAsync();
+
+                ShareFileClient fileClient = parrantDirectory.GetFileClient(filename);
+
+                if (await fileClient.ExistsAsync())
                 {
-                    await parrantDirectory.CreateIfNotExistsAsync();
+                    if (!overrideCheck)
+                        return false;
 
-                    ShareFileClient fileClient = parrantDirectory.GetFileClient(filename);
-
-                    if (await fileClient.ExistsAsync())
-                    {
-                        if (!overrideCheck)
-                            return false;
-
-                        await fileClient.DeleteAsync();
-                    }
-
-                    await fileClient.CreateAsync(file.File.Length);
-                    await fileClient.UploadAsync(file.File);
-
+                    await fileClient.DeleteAsync();
                 }
+
+                await fileClient.CreateAsync(file.File.Length);
+                await fileClient.UploadAsync(file.File);
 
                 return true;
             }

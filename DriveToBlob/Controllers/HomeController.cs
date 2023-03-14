@@ -23,9 +23,8 @@ namespace DriveToBlob.Controllers
             List<ItemModel> lists = new();
 
             if (string.IsNullOrEmpty(ID) && string.IsNullOrEmpty(ListID) && string.IsNullOrEmpty(FolderID))
-            {
                 lists = await Connection.GraphProvider.ShareGraph.GetAllSides();
-            }
+
             else if (string.IsNullOrEmpty(ListID) && string.IsNullOrEmpty(FolderID))
             {
                 lists = await Connection.GraphProvider.ShareGraph.GetAllListSide(ID);
@@ -54,24 +53,22 @@ namespace DriveToBlob.Controllers
 
         [HttpPost]
         [Route("ToBlobStorage")]
-        public async Task<IActionResult> ToBlobStorage(string name, string id, string listID, string folderID,bool overwrite)
+        public async Task<IActionResult> ToBlobStorage(string name, string id, string listID, string folderID, bool overwrite)
         {
             try
             {
-                List<ItemModel> allfiles = new()
-                {
-                    new ItemModel
-                    {
-                        FolderID = folderID,
-                        Name = name,
-                    }
-                };
-                   allfiles.AddRange(await Connection.GraphProvider.ShareGraph.GetAll(name.Replace("-", "/"), id, listID, folderID));
+                List<ItemModel> allfiles = await GraphProvider.ShareGraph.GetAll(name.Replace("-", "/"), id, listID, folderID);
 
-               allfiles.Reverse();
+                allfiles.Insert(0, new ItemModel
+                {
+                    FolderID = folderID,
+                    Name = name,
+                });
+
+                allfiles.Reverse();
 
                 foreach (ItemModel file in allfiles)
-                    await Connection.GraphProvider.ShareGraph.SaveDelete(id, listID, file, overwrite);
+                    await GraphProvider.ShareGraph.SaveDelete(id, listID, file, overwrite);
 
                 //allfiles= allfiles.Where(x=>!string.IsNullOrEmpty(x.FolderID)).Reverse().ToList(); 
 
