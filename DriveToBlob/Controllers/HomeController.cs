@@ -8,6 +8,7 @@ using static Microsoft.Graph.Constants;
 
 namespace DriveToBlob.Controllers
 {
+    [Route("")]
     public class HomeController : BaseController
     {
 
@@ -53,10 +54,18 @@ namespace DriveToBlob.Controllers
 
         [HttpPost]
         [Route("ToBlobStorage")]
-        public async Task<IActionResult> ToBlobStorage(string name, string id, string listID, string folderID, bool overwrite)
+        public async Task<IActionResult> ToBlobStorage()
         {
+           
             try
             {
+
+                string name = Request.Form["name"][0];
+                string id = Request.Form["id"][0];
+                string listID = Request.Form["listID"][0];
+                string folderID = Request.Form["folderID"][0];
+                bool overwrite = Request.Form.ContainsKey("overwrite") ? true : false;
+
                 List<ItemModel> allfiles = await GraphProvider.ShareGraph.GetAll(name.Replace("-", "/"), id, listID, folderID);
 
                 allfiles.Insert(0, new ItemModel
@@ -75,11 +84,11 @@ namespace DriveToBlob.Controllers
                 //foreach (ItemModel file in allfiles)
                 //    await Connection.GraphProvider.ShareGraph.DeleteSubFolderEmpty(id, listID, file.FolderID);
 
-                return RedirectToAction("Index", new { Name = name, ID = id, ListID = listID, FolderID = folderID });
+                return Content("ok");
             }
             catch (Exception e)
             {
-                return RedirectToAction("Index", new { Name = name, ID = id, ListID = listID, FolderID = folderID });
+                return BadRequest();
             }
         }
     }
