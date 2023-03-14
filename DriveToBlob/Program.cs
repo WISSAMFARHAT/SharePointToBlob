@@ -8,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
 
-GraphProvider.Blobstroage = new(builder.Configuration["blob:ConnectionString"]);
+GraphProvider.FileStorage = new(builder.Configuration["blob:ConnectionString"]);
 
 GraphProvider.ShareGraph = new(builder.Configuration["Sharepoint:ClientID"],
      builder.Configuration["Sharepoint:TenantID"],

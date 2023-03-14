@@ -9,13 +9,15 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.Reflection.Metadata;
+using System.IO;
+using static System.Net.WebRequestMethods;
 
 namespace Connection
 {
     public class SharePointGraph
     {
-        private static string AppId { get; set; }
-        private static string TenantId { get; set; }
+        private static string AppID { get; set; }
+        private static string TenantID { get; set; }
         private static string AppSecret { get; set; }
 
         private string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
@@ -24,15 +26,15 @@ namespace Connection
         private static GraphServiceClient _microsoft;
 
         private static HttpClient httpClient = new();
-        public SharePointGraph(string appId, string tenantId, string appSecret)
+        public SharePointGraph(string appID, string tenantID, string appSecret)
         {
 
-            AppId = appId;
-            TenantId = tenantId;
+            AppID = appID;
+            TenantID = tenantID;
             AppSecret = appSecret;
             App = ConfidentialClientApplicationBuilder
-                .Create(AppId)
-                .WithTenantId(TenantId)
+                .Create(AppID)
+                .WithTenantId(TenantID)
                 .WithClientSecret(AppSecret)
                 .Build();
 
@@ -55,14 +57,15 @@ namespace Connection
         {
             try
             {
-                IGraphServiceSitesCollectionPage sites = await _microsoft.Sites.Request().GetAsync();
+                List<Microsoft.Graph.Site> sites = _microsoft.Sites.Request().GetAsync().Result.Where(x => x.WebUrl.Contains("/sites/")).ToList();
+
                 List<ItemModel> sitesModel = new();
 
                 foreach (Microsoft.Graph.Site? site in sites)
                 {
                     sitesModel.Add(new()
                     {
-                        Id = site.Id,
+                        ID = site.Id,
                         Name = site.Name,
                         WebUrl = site.WebUrl,
                     });
@@ -80,14 +83,14 @@ namespace Connection
         {
             try
             {
-                ISiteListsCollectionPage lists = await _microsoft.Sites[ID].Lists.Request().GetAsync();
+                List<Microsoft.Graph.List> lists = _microsoft.Sites[ID].Lists.Request().GetAsync().Result.Where(x => !x.WebUrl.Contains("/Lists/")).ToList();
                 List<ItemModel> listModel = new();
 
                 foreach (var list in lists)
                 {
                     listModel.Add(new()
                     {
-                        Id = list.Id,
+                        ID = list.Id,
                         Name = list.Name,
                         WebUrl = list.WebUrl,
                     });
@@ -111,7 +114,7 @@ namespace Connection
                 {
                     itemsModel.Add(new()
                     {
-                        Id = item.Id,
+                        ID = item.Id,
                         Name = item.Name,
                         WebUrl = item.WebUrl,
                     });
@@ -125,11 +128,11 @@ namespace Connection
             }
         }
 
-        public async Task<List<ItemModel>> GetAllItemsFolder(string ID, string listID, string FolderID)
+        public async Task<List<ItemModel>> GetAllItemsFolder(string ID, string listID, string folderID)
         {
             try
             {
-                var items = await _microsoft.Sites[ID].Lists[listID].Drive.Items[FolderID].Children.Request().GetAsync();
+                var items = await _microsoft.Sites[ID].Lists[listID].Drive.Items[folderID].Children.Request().GetAsync();
 
                 List<ItemModel> itemsModel = new();
 
@@ -137,7 +140,7 @@ namespace Connection
                 {
                     itemsModel.Add(new()
                     {
-                        Id = item.Id,
+                        ID = item.Id,
                         Name = item.Name,
                         WebUrl = item.WebUrl,
                     });
@@ -151,33 +154,34 @@ namespace Connection
             }
         }
 
-        public async Task<List<ItemModel>> GetAll(string name, string id, string listID, string folderId, string folderName = null)
+        public async Task<List<ItemModel>> GetAll(string name, string ID, string listID, string fileID)
         {
-            var folderContents = await _microsoft.Sites[id].Lists[listID].Drive.Items[folderId].Children.Request().GetAsync();
+            IDriveItemChildrenCollectionPage folderContents =
+                await _microsoft.Sites[ID].Lists[listID].Drive.Items[fileID].Children.Request().GetAsync();
+
             List<ItemModel> items = new();
 
             foreach (var item in folderContents)
             {
-                string folder = $"{name}/";
+                string folderName = $"{name}/";
 
                 if (item.Folder != null)
                 {
-                    if (string.IsNullOrEmpty(folderName))
-                        folder += item.Name;
-                    else
-                        folder += $"{folderName}/{item.Name}";
+                    folderName += $"{item.Name}";
 
                     items.Add(new()
                     {
-                        FolderName = folder,
-                        Items = await GetAll(folder, id, listID, item.Id)
+                        FolderID = item.Id,
+                        Name = folderName,
+                        WebUrl = item.WebUrl,
                     });
+                    items.AddRange(await GetAll(folderName, ID, listID, item.Id));
                 }
                 else
                     items.Add(new()
                     {
-                        Id = item.Id,
-                        Name = string.IsNullOrEmpty(folderName) ? $"{folder}/{item.Name}" : $"{folderName}/{item.Name}",
+                        ID = item.Id,
+                        Name = $"{folderName}{item.Name}",
                         WebUrl = item.WebUrl,
                     });
             }
@@ -185,48 +189,39 @@ namespace Connection
             return items;
         }
 
-        public async Task SaveToBlob(string id, string listID, ItemModel url)
+        public async Task SaveDelete(string ID, string listID, ItemModel item, bool overwrite)
         {
-            if (url.Items != null)
-                foreach (var item in url.Items)
-                    await SaveToBlob(id, listID, item);
-            else
+            if (!string.IsNullOrEmpty(item.ID))
             {
-                Stream wordFile = await _microsoft.Sites[id].Lists[listID].Drive.Items[url.Id].Content.Request().GetAsync();
+                Stream file = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Content.Request().GetAsync();
 
-                FileModel file = new()
+                FileModel fileModel = new()
                 {
-                    File = wordFile,
-                    Name = url.Name
+                    File = file,
+                    Name = item.Name
                 };
 
-                await GraphProvider.Blobstroage.AddFile(file);
+                if (await GraphProvider.FileStorage.AddFile(fileModel, overwrite))
+                    await Delete(ID, listID, item.ID);
+            }
+            else
+            {
+                await DeleteSubFolderEmpty(ID, listID, item.FolderID);
             }
         }
 
-        public async Task DeleteToBlob(string id, string listID, ItemModel url)
+        public async Task Delete(string ID, string listID, string itemID) =>
+            await _microsoft.Sites[ID].Lists[listID].Drive.Items[itemID].Request().DeleteAsync();
+
+
+        public async Task DeleteSubFolderEmpty(string ID, string listID, string folderID)
         {
-            try
+            IDriveItemChildrenCollectionPage folderContents =
+               await _microsoft.Sites[ID].Lists[listID].Drive.Items[folderID].Children.Request().GetAsync();
+
+            if (folderContents.Count == 0)
             {
-                if (url.Items != null)
-                {
-                    foreach (var item in url.Items)
-                    {
-                        await DeleteToBlob(id, listID, item);
-                    }
-                }
-                else
-                {
-
-                    await _microsoft.Sites[id].Lists[listID].Drive.Items[url.Id].Request().DeleteAsync();
-
-                }
-
-            }
-
-            catch (Exception ex)
-            {
-
+                await Delete(ID, listID, folderID);
             }
 
         }

@@ -9,6 +9,6 @@ namespace Connection
     public class GraphProvider
     {
         public static SharePointGraph ShareGraph { get; set; }
-        public static BlobStorage Blobstroage { get; set; }
+        public static FileShare FileStorage { get; set; }
     }
 }

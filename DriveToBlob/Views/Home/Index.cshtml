@@ -26,7 +26,10 @@
                     {
                         <input type="hidden" name="folderID" value="@ViewData["FolderID"]" />
                     }
-    
+                    <label style="cursor:pointer">
+                        Overwrite:
+                        <input type="checkbox" name="overwrite" value="true" style="appearance:auto;cursor:pointer">
+                    </label>
                     <button type="submit" class="--button _secondary">Blob Storage</button>
                 </form>
             }
@@ -39,7 +42,7 @@
                 {
                     @if (string.IsNullOrEmpty(ViewData["Name"] as string))
                     {
-                        <a href="/@item.Name/@item.Id" class="--button _primary">@item.Name</a>
+                        <a href="/@item.Name/@item.ID" class="--button _primary">@item.Name</a>
                     }
                     else
                     {
@@ -48,7 +51,7 @@
                         int secondSlashIndex = name.IndexOf('/', firstSlashIndex + 1);
                         name = name.Remove(secondSlashIndex, 1).Insert(secondSlashIndex, $"-{item.Name}/");
 
-                        <a href="@name/@item.Id" class="--button _primary">@item.Name</a>
+                        <a href="@name/@item.ID" class="--button _primary">@item.Name</a>
                     }
                 }
             }

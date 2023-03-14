@@ -10,13 +10,10 @@ namespace Connection.Model
 {
     public class ItemModel
     {
-        public string? Id { get; set; }
+        public string? ID { get; set; }
+        public string? FolderID { get; set; }
         public string? Name { get; set; }
-        public string? FolderName { get; set; }
-
         public string? WebUrl { get; set; }
-
-        public List<ItemModel>? Items { get; set; }
 
     
     }

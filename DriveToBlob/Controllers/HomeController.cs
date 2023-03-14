@@ -54,22 +54,29 @@ namespace DriveToBlob.Controllers
 
         [HttpPost]
         [Route("ToBlobStorage")]
-        public async Task<IActionResult> ToBlobStorage(string name, string id, string listID, string folderID)
+        public async Task<IActionResult> ToBlobStorage(string name, string id, string listID, string folderID,bool overwrite)
         {
             try
             {
-
-                List<ItemModel> lisUrl = await Connection.GraphProvider.ShareGraph.GetAll(name.Replace("-", "/"), id, listID, folderID);
-
-                foreach (ItemModel url in lisUrl)
+                List<ItemModel> allfiles = new()
                 {
-                    await Connection.GraphProvider.ShareGraph.SaveToBlob(id, listID, url);
-                }
+                    new ItemModel
+                    {
+                        FolderID = folderID,
+                        Name = name,
+                    }
+                };
+                   allfiles.AddRange(await Connection.GraphProvider.ShareGraph.GetAll(name.Replace("-", "/"), id, listID, folderID));
 
-                //foreach (ItemModel url in lisUrl)
-                //{
-                //    await Connection.GraphProvider.ShareGraph.DeleteToBlob(id, listID, url);
-                //}
+               allfiles.Reverse();
+
+                foreach (ItemModel file in allfiles)
+                    await Connection.GraphProvider.ShareGraph.SaveDelete(id, listID, file, overwrite);
+
+                //allfiles= allfiles.Where(x=>!string.IsNullOrEmpty(x.FolderID)).Reverse().ToList(); 
+
+                //foreach (ItemModel file in allfiles)
+                //    await Connection.GraphProvider.ShareGraph.DeleteSubFolderEmpty(id, listID, file.FolderID);
 
                 return RedirectToAction("Index", new { Name = name, ID = id, ListID = listID, FolderID = folderID });
             }
