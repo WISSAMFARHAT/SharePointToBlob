@@ -2,9 +2,11 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Files.Shares;
+using Azure.Storage.Files.Shares.Models;
 using Connection.Model;
 using Microsoft.Graph;
 using Microsoft.Identity.Client;
+using Microsoft.SharePoint.Client;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using System;
@@ -39,6 +41,7 @@ namespace Connection
         {
             try
             {
+
                 string[] splitname = file.Name.Split("/");
 
                 string parantfoldername = splitname[0];
@@ -72,11 +75,25 @@ namespace Connection
                 }
 
                 await fileClient.CreateAsync(file.FileLength);
-                await fileClient.StartCopyAsync(new Uri(file.FileUrl));
+                var result = await fileClient.StartCopyAsync(new Uri(file.FileUrl));
 
-                return true;
-            }
-            catch (Exception ex)
+                // Wait for the copy operation to complete
+                ShareFileProperties destinationProperties;
+
+                do
+                {
+                    destinationProperties = await fileClient.GetPropertiesAsync();
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
+                while (destinationProperties.CopyStatus == Azure.Storage.Files.Shares.Models.CopyStatus.Pending);
+
+                // Check if the copy operation succeeded or failed
+                if (destinationProperties.CopyStatus != Azure.Storage.Files.Shares.Models.CopyStatus.Success)
+                    return false;
+                
+                    return true;
+
+            }catch(Exception )
             {
                 return false;
             }

@@ -2,6 +2,7 @@
 using Connection.Model;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Website.Controllers;
 using static Azure.Core.HttpHeader;
 using static Microsoft.Graph.Constants;
@@ -68,14 +69,18 @@ namespace DriveToBlob.Controllers
                 allfiles.AddRange(await Connection.GraphProvider.ShareGraph.GetAll(name.Replace("-", "/"), id, listID, folderID));
 
                 allfiles.Reverse();
+                List<Task> task=new();
 
                 foreach (ItemModel file in allfiles)
-                    await Connection.GraphProvider.ShareGraph.SaveDelete(id, listID, file, overwrite);
+                    task.Add(Connection.GraphProvider.ShareGraph.SaveDelete(id, listID, file, overwrite));
 
-                //allfiles= allfiles.Where(x=>!string.IsNullOrEmpty(x.FolderID)).Reverse().ToList(); 
 
-                //foreach (ItemModel file in allfiles)
-                //    await Connection.GraphProvider.ShareGraph.DeleteSubFolderEmpty(id, listID, file.FolderID);
+                Task.WaitAll(task.ToArray());
+
+                allfiles= allfiles.Where(x=>!string.IsNullOrEmpty(x.FolderID)).ToList();
+
+                foreach (ItemModel file in allfiles)
+                    await Connection.GraphProvider.ShareGraph.DeleteSubFolderEmpty(id, listID, file.FolderID);
 
                 return RedirectToAction("Index", new { Name = name, ID = id, ListID = listID, FolderID = folderID });
             }

@@ -10,7 +10,7 @@
         <div class="sites-button">
             @if (!string.IsNullOrEmpty(ViewData["FolderID"] as string))
             {
-                <form action="@Url.Action("ToBlobStorage","Home")" method="post" id="submit">
+                <form action="@Url.Action("ToBlobStorage","Home")" method="post" >
 
                     @if (!string.IsNullOrEmpty(ViewData["Name"] as string))
                     {

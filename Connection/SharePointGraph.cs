@@ -196,30 +196,29 @@ namespace Connection
         {
             // If Folder
             if (string.IsNullOrEmpty(item.ID))
-            {
-                await DeleteSubFolderEmpty(ID, listID, item.FolderID);
+                //await DeleteSubFolderEmpty(ID, listID, item.FolderID);
                 return;
-            }
 
-			DriveItem files = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Request().GetAsync();
-			string urldownload = files.AdditionalData["@microsoft.graph.downloadUrl"].ToString();
 
-			//Stream file = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Content.Request().GetAsync();
+            DriveItem files = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Request().GetAsync();
+            string urldownload = files.AdditionalData["@microsoft.graph.downloadUrl"].ToString();
+
+            //Stream file = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Content.Request().GetAsync();
 
             FileModel fileModel = new()
             {
                 FileUrl = urldownload,
-				FileLength=files.Size?? 0,
-				Name = item.Name
+                FileLength = files.Size ?? 0,
+                Name = item.Name
             };
 
-            await GraphProvider.FileStorage.AddFile(fileModel, overwrite);
-                //await Delete(ID, listID, item.ID);
+            if (await GraphProvider.FileStorage.AddFile(fileModel, overwrite))
+                await Delete(ID, listID, item.ID);
         }
 
-        public async Task Delete(string ID, string listID, string itemID) =>
-            await _microsoft.Sites[ID].Lists[listID].Drive.Items[itemID].Request().DeleteAsync();
 
+        public async Task Delete(string ID, string listID, string itemID) =>
+         await _microsoft.Sites[ID].Lists[listID].Drive.Items[itemID].Request().DeleteAsync();
 
         public async Task DeleteSubFolderEmpty(string ID, string listID, string folderID)
         {
