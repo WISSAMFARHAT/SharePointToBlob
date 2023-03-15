@@ -1,4 +1,5 @@
-﻿using Azure.Storage.Blobs;
+﻿using Azure;
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Files.Shares;
 using Connection.Model;
@@ -70,8 +71,8 @@ namespace Connection
                     await fileClient.DeleteAsync();
                 }
 
-                await fileClient.CreateAsync(file.File.Length);
-                await fileClient.UploadAsync(file.File);
+                await fileClient.CreateAsync(file.FileLength);
+                await fileClient.StartCopyAsync(new Uri(file.FileUrl));
 
                 return true;
             }

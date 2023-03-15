@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Reflection.Metadata;
 using System.IO;
 using static System.Net.WebRequestMethods;
+using Newtonsoft.Json.Linq;
 
 namespace Connection
 {
@@ -50,6 +51,8 @@ namespace Connection
 
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             httpClient.DefaultRequestHeaders.Authorization = new("Bearer", result.AccessToken);
+
+            _microsoft.HttpProvider.OverallTimeout = TimeSpan.FromHours(1);
 
         }
 
@@ -198,16 +201,20 @@ namespace Connection
                 return;
             }
 
-            Stream file = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Content.Request().GetAsync();
+			DriveItem files = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Request().GetAsync();
+			string urldownload = files.AdditionalData["@microsoft.graph.downloadUrl"].ToString();
+
+			//Stream file = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Content.Request().GetAsync();
 
             FileModel fileModel = new()
             {
-                File = file,
-                Name = item.Name
+                FileUrl = urldownload,
+				FileLength=files.Size?? 0,
+				Name = item.Name
             };
 
-            if (await GraphProvider.FileStorage.AddFile(fileModel, overwrite))
-                await Delete(ID, listID, item.ID);
+            await GraphProvider.FileStorage.AddFile(fileModel, overwrite);
+                //await Delete(ID, listID, item.ID);
         }
 
         public async Task Delete(string ID, string listID, string itemID) =>

@@ -11,6 +11,7 @@
             @if (!string.IsNullOrEmpty(ViewData["FolderID"] as string))
             {
                 <form action="@Url.Action("ToBlobStorage","Home")" method="post" id="submit">
+
                     @if (!string.IsNullOrEmpty(ViewData["Name"] as string))
                     {
                         <input type="hidden" name="name" value="@ViewData["Name"]" />
@@ -31,7 +32,7 @@
                         Overwrite:
                         <input type="checkbox" name="overwrite" value="true" style="appearance:auto;cursor:pointer">
                     </label>
-                    <button type="submit" class="--button _secondary" >Blob Storage</button>
+                    <button type="submit" class="--button _secondary">Blob Storage</button>
                 </form>
             }
         </div>

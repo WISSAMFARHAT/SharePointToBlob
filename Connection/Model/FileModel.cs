@@ -10,7 +10,8 @@ namespace Connection.Model
 {
     public class FileModel
     {
-        public Stream? File { get; set; }
+        public string? FileUrl { get; set; }
+        public long FileLength { get; set; } = 0;
         public string Name { get; set; }
 
     }

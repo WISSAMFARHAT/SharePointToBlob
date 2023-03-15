@@ -51,45 +51,41 @@ namespace DriveToBlob.Controllers
             return View(lists);
         }
 
-
         [HttpPost]
         [Route("ToBlobStorage")]
-        public async Task<IActionResult> ToBlobStorage()
+        public async Task<IActionResult> ToBlobStorage(string name, string id, string listID, string folderID, bool overwrite)
         {
-           
             try
             {
-
-                string name = Request.Form["name"][0];
-                string id = Request.Form["id"][0];
-                string listID = Request.Form["listID"][0];
-                string folderID = Request.Form["folderID"][0];
-                bool overwrite = Request.Form.ContainsKey("overwrite") ? true : false;
-
-                List<ItemModel> allfiles = await GraphProvider.ShareGraph.GetAll(name.Replace("-", "/"), id, listID, folderID);
-
-                allfiles.Insert(0, new ItemModel
+                List<ItemModel> allfiles = new()
                 {
-                    FolderID = folderID,
-                    Name = name,
-                });
+                    new ItemModel
+                    {
+                        FolderID = folderID,
+                        Name = name,
+                    }
+                };
+                allfiles.AddRange(await Connection.GraphProvider.ShareGraph.GetAll(name.Replace("-", "/"), id, listID, folderID));
 
                 allfiles.Reverse();
 
                 foreach (ItemModel file in allfiles)
-                    await GraphProvider.ShareGraph.SaveDelete(id, listID, file, overwrite);
+                    await Connection.GraphProvider.ShareGraph.SaveDelete(id, listID, file, overwrite);
 
                 //allfiles= allfiles.Where(x=>!string.IsNullOrEmpty(x.FolderID)).Reverse().ToList(); 
 
                 //foreach (ItemModel file in allfiles)
                 //    await Connection.GraphProvider.ShareGraph.DeleteSubFolderEmpty(id, listID, file.FolderID);
 
-                return Content("ok");
+                return RedirectToAction("Index", new { Name = name, ID = id, ListID = listID, FolderID = folderID });
             }
             catch (Exception e)
             {
-                return BadRequest();
+                return RedirectToAction("Index", new { Name = name, ID = id, ListID = listID, FolderID = folderID });
             }
         }
+
+
+
     }
 }
