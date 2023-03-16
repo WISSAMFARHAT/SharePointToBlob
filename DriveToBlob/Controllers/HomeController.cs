@@ -17,16 +17,16 @@ namespace DriveToBlob.Controllers
 
         public HomeController(SharePointGraph sharepointgraph)
         {
-            _sharePointGraph= sharepointgraph;
+            _sharePointGraph = sharepointgraph;
         }
 
-
         [Route("{Name?}/{ID?}/{ListID?}/{FolderID?}")]
-        public async Task<IActionResult> Index(string Name, string ID, string ListID, string FolderID)
+        public async Task<IActionResult> Index(string? Name, string ID, string ListID, string FolderID)
         {
-            CorePage(Name ?? "index");
+            CorePage(Name);
 
             string url = $"";
+
             if (!string.IsNullOrEmpty(Name))
                 url = $"/{Name}";
 
@@ -97,8 +97,5 @@ namespace DriveToBlob.Controllers
                 return RedirectToAction("Index", new { Name = name, ID = id, ListID = listID, FolderID = folderID });
             }
         }
-
-
-
     }
 }

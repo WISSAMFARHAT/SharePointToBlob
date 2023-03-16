@@ -30,14 +30,12 @@ builder.Services.AddSingleton<SharePointGraph>(provider =>
     return sharepoint;
 });
 
-
-
 var app = builder.Build();
 
 WebCoreConfig.Current.Head = new WebCoreConfigHead()
 {
-    DefaultTitle = "ShareToBlob",
-    TitleSuffix = " - ShareToBlob",
+    DefaultTitle = "SharePoint Archiving",
+    TitleSuffix = " - SharePoint Archiving",
     Bundles = new string[]
     {
         "js/site.js",
