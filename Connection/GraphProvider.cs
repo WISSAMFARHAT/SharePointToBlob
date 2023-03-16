@@ -8,7 +8,7 @@ namespace Connection
 {
     public class GraphProvider
     {
-        public static SharePointGraph ShareGraph { get; set; }
-        public static FileShare FileStorage { get; set; }
+        public  SharePointGraph ShareGraph { get; set; }
+        public  FileShare FileStorage { get; set; }
     }
 }

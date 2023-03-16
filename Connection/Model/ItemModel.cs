@@ -14,7 +14,9 @@ namespace Connection.Model
         public string? FolderID { get; set; }
         public string? Name { get; set; }
         public string? WebUrl { get; set; }
-
+        public long? Size { get; set; } = 0;
+        public int? Count { get; set; }
+        public bool ShowDiv { get; set; } = false;
     
     }
 }

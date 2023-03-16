@@ -13,6 +13,14 @@ namespace DriveToBlob.Controllers
     public class HomeController : BaseController
     {
 
+        private readonly SharePointGraph _sharePointGraph;
+
+        public HomeController(SharePointGraph sharepointgraph)
+        {
+            _sharePointGraph= sharepointgraph;
+        }
+
+
         [Route("{Name?}/{ID?}/{ListID?}/{FolderID?}")]
         public async Task<IActionResult> Index(string Name, string ID, string ListID, string FolderID)
         {
@@ -25,21 +33,21 @@ namespace DriveToBlob.Controllers
             List<ItemModel> lists = new();
 
             if (string.IsNullOrEmpty(ID) && string.IsNullOrEmpty(ListID) && string.IsNullOrEmpty(FolderID))
-                lists = await Connection.GraphProvider.ShareGraph.GetAllSides();
+                lists = await _sharePointGraph.GetAllSides();
 
             else if (string.IsNullOrEmpty(ListID) && string.IsNullOrEmpty(FolderID))
             {
-                lists = await Connection.GraphProvider.ShareGraph.GetAllListSide(ID);
+                lists = await _sharePointGraph.GetAllListSide(ID);
                 url += $"/{ID}";
             }
             else if (string.IsNullOrEmpty(FolderID))
             {
-                lists = await Connection.GraphProvider.ShareGraph.GetAllFolderList(ID, ListID);
+                lists = await _sharePointGraph.GetAllFolderList(ID, ListID);
                 url += $"/{ID}/{ListID}";
             }
             else
             {
-                lists = await Connection.GraphProvider.ShareGraph.GetAllItemsFolder(ID, ListID, FolderID);
+                lists = await _sharePointGraph.GetAllItemsFolder(ID, ListID, FolderID);
                 url += $"/{ID}/{ListID}";
             }
 
@@ -66,21 +74,21 @@ namespace DriveToBlob.Controllers
                         Name = name,
                     }
                 };
-                allfiles.AddRange(await Connection.GraphProvider.ShareGraph.GetAll(name.Replace("-", "/"), id, listID, folderID));
+                allfiles.AddRange(await _sharePointGraph.GetAll(name.Replace("-", "/"), id, listID, folderID));
 
                 allfiles.Reverse();
-                List<Task> task=new();
+                List<Task> task = new();
 
                 foreach (ItemModel file in allfiles)
-                    task.Add(Connection.GraphProvider.ShareGraph.SaveDelete(id, listID, file, overwrite));
+                    task.Add(_sharePointGraph.SaveDelete(id, listID, file, overwrite));
 
 
                 Task.WaitAll(task.ToArray());
 
-                allfiles= allfiles.Where(x=>!string.IsNullOrEmpty(x.FolderID)).ToList();
+                allfiles = allfiles.Where(x => !string.IsNullOrEmpty(x.FolderID)).ToList();
 
                 foreach (ItemModel file in allfiles)
-                    await Connection.GraphProvider.ShareGraph.DeleteSubFolderEmpty(id, listID, file.FolderID);
+                    await _sharePointGraph.DeleteSubFolderEmpty(id, listID, file.FolderID);
 
                 return RedirectToAction("Index", new { Name = name, ID = id, ListID = listID, FolderID = folderID });
             }

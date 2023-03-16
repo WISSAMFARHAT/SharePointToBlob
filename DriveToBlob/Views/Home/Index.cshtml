@@ -10,7 +10,7 @@
         <div class="sites-button">
             @if (!string.IsNullOrEmpty(ViewData["FolderID"] as string))
             {
-                <form action="@Url.Action("ToBlobStorage","Home")" method="post" >
+                <form action="@Url.Action("ToBlobStorage","Home")" method="post">
 
                     @if (!string.IsNullOrEmpty(ViewData["Name"] as string))
                     {
@@ -32,7 +32,7 @@
                         Overwrite:
                         <input type="checkbox" name="overwrite" value="true" style="appearance:auto;cursor:pointer">
                     </label>
-                    <button type="submit" class="--button _secondary">Blob Storage</button>
+                    <button type="submit" class="--button _secondary">Archive</button>
                 </form>
             }
         </div>
@@ -44,7 +44,11 @@
                 {
                     @if (string.IsNullOrEmpty(ViewData["Name"] as string))
                     {
-                        <a href="/@item.Name/@item.ID" class="--button _primary">@item.Name</a>
+                        <a href="/@item.Name/@item.ID" class="--button _primary">
+                            <p>
+                                @item.Name
+                            </p>
+                        </a>
                     }
                     else
                     {
@@ -53,7 +57,40 @@
                         int secondSlashIndex = name.IndexOf('/', firstSlashIndex + 1);
                         name = name.Remove(secondSlashIndex, 1).Insert(secondSlashIndex, $"-{item.Name}/");
 
-                        <a href="@name/@item.ID" class="--button _primary">@item.Name</a>
+
+                        <a href="@name/@item.ID" class="--button _primary">
+                            <p>@item.Name</p>
+                            @if (item.ShowDiv)
+                            {
+                                <div>
+                                    <p>@item.Count items</p>
+                                    <span>
+                                        @if (item.Size == 0)
+                                        {
+                                            <span> 0 KB</span>
+                                        }
+                                        else if (item.Size < 1024 * 1024)
+                                        {
+                                            <span>
+                                                @((item.Size / 1024.0)?.ToString("0.00")) KB
+                                            </span>
+                                        }
+                                        else if (item.Size < 1024 * 1024 * 1024)
+                                        {
+                                            <span>
+                                                @((item.Size / ((1024.0 * 1024.0)))?.ToString("0.00")) MB
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span>
+                                                @((item.Size / ((1024.0 * 1024.0 * 1024.0)))?.ToString("0.00")) GB
+                                            </span>
+                                        }
+                                    </span>
+                                </div>
+                            }
+                        </a>
                     }
                 }
             }

@@ -42,35 +42,85 @@ body {
         max-width: 300px;
         overflow-wrap: anywhere;
         width: 300px;
-        padding: 10px;
+        padding-top: 10px;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: space-between;
+        flex-direction: column;
         outline: none;
         border: 1px solid;
         background-color: transparent;
-        color: var(--blackColor);
         transition: all var(--duration);
         cursor: pointer;
+        position: relative;
+
+        p, span {
+            color: var(--blackColor);
+            transition: all var(--duration);
+            font-size: 1rem;
+            margin: 0;
+        }
 
         &._primary {
-            color: var(--primaryColor);
             border-color: var(--primaryColor);
 
+            p, span {
+                color: var(--primaryColor);
+            }
+
             &:hover {
-                color: var(--whiteColor);
                 background-color: var(--primaryColor);
+
+                p, span {
+                    color: var(--whiteColor);
+                }
+
+                div {
+                    p, span {
+                        color: var(--whiteColor)!important;
+                    }
+                }
             }
         }
 
         &._secondary {
-            color: var(--secondaryColor);
             border-color: var(--secondaryColor);
 
+            p, span {
+                color: var(--secondaryColor);
+            }
+
             &:hover {
-                color: var(--whiteColor);
+                p, span {
+                    color: var(--whiteColor);
+                }
+
                 background-color: var(--secondaryColor);
             }
+        }
+
+        div {
+            display: flex;
+            margin-top: 10px;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 10px;
+            background-color: #c0c0c057;
+
+            p, span {
+                font-size: .8rem;
+                margin: 0;
+                color: var(--blackColor) !important;
+            }
+
+            span {
+                align-self: flex-end;
+            }
+        }
+
+        &:not(:has(div)) {
+            padding: 10px;
         }
     }
 

@@ -7,12 +7,29 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddSingleton<Connection.FileShare>(provider =>
+{
+    string connection = builder.Configuration["blob:ConnectionString"];
+    Connection.FileShare fileShare = new Connection.FileShare(connection);
 
-GraphProvider.FileStorage = new(builder.Configuration["blob:ConnectionString"]);
+    return fileShare;
 
-GraphProvider.ShareGraph = new(builder.Configuration["Sharepoint:ClientID"],
-     builder.Configuration["Sharepoint:TenantID"],
-      builder.Configuration["Sharepoint:SecretID"]);
+});
+
+builder.Services.AddSingleton<SharePointGraph>(provider =>
+{
+
+    Connection.FileShare fileShare = provider.GetRequiredService<Connection.FileShare>();
+
+    string AppID = builder.Configuration["Sharepoint:ClientID"];
+    string TenantID = builder.Configuration["Sharepoint:TenantID"];
+    string AppSecret = builder.Configuration["Sharepoint:SecretID"];
+
+    SharePointGraph sharepoint = new(AppID, TenantID, AppSecret, fileShare);
+
+    return sharepoint;
+});
+
 
 
 var app = builder.Build();

@@ -12,22 +12,25 @@ using System.Reflection.Metadata;
 using System.IO;
 using static System.Net.WebRequestMethods;
 using Newtonsoft.Json.Linq;
+using System.Drawing;
 
 namespace Connection
 {
     public class SharePointGraph
     {
-        private static string AppID { get; set; }
-        private static string TenantID { get; set; }
-        private static string AppSecret { get; set; }
+        private string AppID { get; set; }
+        private string TenantID { get; set; }
+        private string AppSecret { get; set; }
 
         private string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
         private IConfidentialClientApplication App { get; set; }
 
-        private static GraphServiceClient _microsoft;
+        private GraphServiceClient _microsoft;
 
-        private static HttpClient httpClient = new();
-        public SharePointGraph(string appID, string tenantID, string appSecret)
+        private HttpClient httpClient = new();
+
+        private FileShare _FileShare { get; set; }
+        public SharePointGraph(string appID, string tenantID, string appSecret, FileShare fileShare)
         {
 
             AppID = appID;
@@ -54,6 +57,7 @@ namespace Connection
 
             _microsoft.HttpProvider.OverallTimeout = TimeSpan.FromHours(1);
 
+            _FileShare = fileShare;
         }
 
         public async Task<List<ItemModel>> GetAllSides()
@@ -91,6 +95,7 @@ namespace Connection
 
                 foreach (var list in lists)
                 {
+
                     listModel.Add(new()
                     {
                         ID = list.Id,
@@ -115,11 +120,19 @@ namespace Connection
 
                 foreach (var item in items)
                 {
+                    int count = 0;
+
+                    if (item.Folder != null)
+                        count = item.Folder.ChildCount ?? 0;
+
                     itemsModel.Add(new()
                     {
                         ID = item.Id,
                         Name = item.Name,
                         WebUrl = item.WebUrl,
+                        Size = item.Size,
+                        Count = count,
+                        ShowDiv=true,
                     });
                 }
 
@@ -141,11 +154,19 @@ namespace Connection
 
                 foreach (var item in items)
                 {
+                    int count = 0;
+
+                    if (item.Folder != null)
+                        count = item.Folder.ChildCount ?? 0;
+
                     itemsModel.Add(new()
                     {
                         ID = item.Id,
                         Name = item.Name,
                         WebUrl = item.WebUrl,
+                        Size = item.Size,
+                        Count = count,
+                        ShowDiv = true,
                     });
                 }
 
@@ -212,10 +233,9 @@ namespace Connection
                 Name = item.Name
             };
 
-            if (await GraphProvider.FileStorage.AddFile(fileModel, overwrite))
+            if (await _FileShare.AddFile(fileModel, overwrite))
                 await Delete(ID, listID, item.ID);
         }
-
 
         public async Task Delete(string ID, string listID, string itemID) =>
          await _microsoft.Sites[ID].Lists[listID].Drive.Items[itemID].Request().DeleteAsync();
@@ -231,6 +251,8 @@ namespace Connection
             }
 
         }
+
+
 
 
     }
