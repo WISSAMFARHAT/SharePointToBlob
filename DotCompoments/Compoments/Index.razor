@@ -1,6 +1,5 @@
 ﻿@inject Connection.SharePointGraph _sharePointGraph;
-@inject NavigationManager NV;
-@inject IJSRuntime JS
+@inject IJSRuntime JS;
 
 @if (Items != null)
 {
@@ -20,62 +19,67 @@
             <h1> @(string.IsNullOrEmpty(Site.Name) ? "Site" : Site.Name) </h1>
 
             <div class="sites-info">
-                @foreach (ItemModel item in Items)
-                {
-                    @if (!string.IsNullOrEmpty(item.Name))
+                <div class="sites-info-search">
+                    <input type="text" />
+                </div>
+                <div class="sites-info-description">
+                    @foreach (ItemModel item in Items)
                     {
-                        @if (string.IsNullOrEmpty(Site.Name))
+                        @if (!string.IsNullOrEmpty(item.Name))
                         {
-                            <a href="/@item.Name/@item.ID" class="--button _primary">
-                                <p>
-                                    @item.Name
-                                </p>
-                            </a>
-                        }
-                        else
-                        {
-                            string name = Url;
-                            int firstSlashIndex = name.IndexOf('/');
-                            int secondSlashIndex = name.IndexOf('/', firstSlashIndex + 1);
-                            name = name.Remove(secondSlashIndex, 1).Insert(secondSlashIndex, $"|{item.Name}/");
+                            @if (string.IsNullOrEmpty(Site.Name))
+                            {
+                                <a href="/@item.Name/@item.ID" class="--button _primary">
+                                    <p>
+                                        @item.Name
+                                    </p>
+                                </a>
+                            }
+                            else
+                            {
+                                string name = Url;
+                                int firstSlashIndex = name.IndexOf('/');
+                                int secondSlashIndex = name.IndexOf('/', firstSlashIndex + 1);
+                                name = name.Remove(secondSlashIndex, 1).Insert(secondSlashIndex, $"|{item.Name}/");
 
-                            <a href="@name/@item.ID" class="--button _primary">
-                                <p>@item.Name</p>
+                                <a href="@name/@item.ID" class="--button _primary">
+                                    <p>@item.Name</p>
 
-                                @if (item.ShowDiv)
-                                {
-                                    <div>
-                                        <p>@item.Count items</p>
-                                        <span>
-                                            @if (item.Size == 0)
-                                            {
-                                                <span> 0 KB</span>
-                                            }
-                                            else if (item.Size < 1024 * 1024)
-                                            {
-                                                <span>
-                                                    @((item.Size / 1024.0)?.ToString("0.00")) KB
-                                                </span>
-                                            }
-                                            else if (item.Size < 1024 * 1024 * 1024)
-                                            {
-                                                <span>
-                                                    @((item.Size / ((1024.0 * 1024.0)))?.ToString("0.00")) MB
-                                                </span>
-                                            }
-                                            else
-                                            {
-                                                <span>
-                                                    @((item.Size / ((1024.0 * 1024.0 * 1024.0)))?.ToString("0.00")) GB
-                                                </span>
-                                            }
-                                        </span>
-                                    </div>
-                                }
-                            </a>
+                                    @if (item.ShowDiv)
+                                    {
+                                        <div>
+                                            <p>@item.Count items</p>
+                                            <span>
+                                                @if (item.Size == 0)
+                                                {
+                                                    <span> 0 KB</span>
+                                                }
+                                                else if (item.Size < 1024 * 1024)
+                                                {
+                                                    <span>
+                                                        @((item.Size / 1024.0)?.ToString("0.00")) KB
+                                                    </span>
+                                                }
+                                                else if (item.Size < 1024 * 1024 * 1024)
+                                                {
+                                                    <span>
+                                                        @((item.Size / ((1024.0 * 1024.0)))?.ToString("0.00")) MB
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span>
+                                                        @((item.Size / ((1024.0 * 1024.0 * 1024.0)))?.ToString("0.00")) GB
+                                                    </span>
+                                                }
+                                            </span>
+                                        </div>
+                                    }
+                                </a>
+                            }
                         }
                     }
-                }
+                </div>
             </div>
         </article>
     </section>
@@ -94,9 +98,6 @@ else
 {
     <section class="loadingPopup">
         <article>
-            <div class="loadingPopup-close">
-                <button @onclick="Close">X</button>
-            </div>
             <div class="loadingPopup-details">
                 <div>
                     <p>@FileCount/@TotalFile</p>
@@ -108,6 +109,10 @@ else
             <div class="loadingPopup-loading">
                 <DotCompoments.Compoments.Assets.Logo />
             </div>
+            <div class="loadingPopup-close">
+                <button @onclick="Close">X</button>
+            </div>
         </article>
+
     </section>
 }

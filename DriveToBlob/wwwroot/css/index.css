@@ -14,6 +14,28 @@
 }
 body main .sites-info {
   margin-block: 50px;
+}
+body main .sites-info-search {
+  width: 100%;
+  display: flex;
+}
+body main .sites-info-search input {
+  max-width: 150px;
+  width: 100%;
+  padding: 5px;
+  border: 1px solid var(--primaryColor);
+  background-color: transparent;
+  border-radius: 5px;
+  font-size: 1rem;
+  color: var(--blackColor);
+  margin-inline: auto;
+  transition: all var(--duration);
+}
+body main .sites-info-search input:focus {
+  max-width: 400px;
+}
+body main .sites-info-description {
+  margin-top: 30px;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   align-items: stretch;
