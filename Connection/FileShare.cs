@@ -61,23 +61,24 @@ namespace Connection
                 await fileClient.CreateAsync(file.FileLength);
                 var result = await fileClient.StartCopyAsync(new Uri(file.FileUrl));
 
-                //// Wait for the copy operation to complete
-                //ShareFileProperties destinationProperties;
+                // Wait for the copy operation to complete
+                ShareFileProperties destinationProperties;
 
-                //do
-                //{
-                //    destinationProperties = await fileClient.GetPropertiesAsync();
-                //    await Task.Delay(TimeSpan.FromSeconds(1));
-                //}
-                //while (destinationProperties.CopyStatus == Azure.Storage.Files.Shares.Models.CopyStatus.Pending);
+                do
+                {
+                    destinationProperties = await fileClient.GetPropertiesAsync();
+                    await Task.Delay(TimeSpan.FromSeconds(1));
+                }
+                while (destinationProperties.CopyStatus == CopyStatus.Pending);
 
-                //// Check if the copy operation succeeded or failed
-                //if (destinationProperties.CopyStatus != Azure.Storage.Files.Shares.Models.CopyStatus.Success)
-                //    return false;
-                
-                    return true;
+                // Check if the copy operation succeeded or failed
+                if (destinationProperties.CopyStatus != CopyStatus.Success)
+                    return false;
 
-            }catch(Exception )
+                return true;
+
+            }
+            catch (Exception)
             {
                 return false;
             }

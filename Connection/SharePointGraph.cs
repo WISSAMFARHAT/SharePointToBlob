@@ -22,7 +22,27 @@ namespace Connection
 
         private GraphServiceClient _microsoft;
 
-        private HttpClient _httpClient;
+        private string _token { get; set; }
+
+        private async Task<HttpResponseMessage> GetData(string url)
+        {
+            using HttpClient client = new();
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true, NoStore = true };
+
+            return await client.GetAsync($"{url}?v={Guid.NewGuid()}");
+        }
+
+        private async Task<HttpResponseMessage> DeleteData(string url)
+        {
+            using HttpClient client = new();
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true, NoStore = true };
+
+            return await client.DeleteAsync(url);
+        }
 
         private FileShare _FileShare { get; set; }
 
@@ -37,10 +57,8 @@ namespace Connection
 
             _microsoft = new GraphServiceClient(authProvider, scopes);
 
-            string token = authProvider.GetToken(new TokenRequestContext(scopes)).Token;
+            _token = authProvider.GetToken(new TokenRequestContext(scopes)).Token;
 
-            _httpClient = new();
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
 
             _FileShare = fileShare;
@@ -65,7 +83,7 @@ namespace Connection
                     });
                 }
 
-                return sitesModel;
+                return sitesModel.OrderBy(key => key.Name).ToList();
             }
             catch
             {
@@ -94,7 +112,7 @@ namespace Connection
                     });
                 }
 
-                return listModel;
+                return listModel.OrderBy(key => key.Name).ToList();
             }
             catch
             {
@@ -105,8 +123,8 @@ namespace Connection
         {
             try
             {
-               
-                HttpResponseMessage responseMessage = await _httpClient.GetAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/root/children");
+
+                HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/root/children");
                 string responseContent = await responseMessage.Content.ReadAsStringAsync();
                 DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
@@ -115,7 +133,7 @@ namespace Connection
                 foreach (DriveModel.Values item in root.Value)
                 {
                     int count = 0;
-                    if (item.Folder!=null)
+                    if (item.Folder != null)
                         count = item.Folder.ChildCount;
 
                     itemsModel.Add(new()
@@ -129,7 +147,7 @@ namespace Connection
                     });
                 }
 
-                return itemsModel;
+                return itemsModel.OrderBy(key => key.Name).ToList();
             }
             catch
             {
@@ -141,7 +159,7 @@ namespace Connection
         {
             try
             {
-                HttpResponseMessage responseMessage = await _httpClient.GetAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderID}')/children");
+                HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderID}')/children");
                 string responseContent = await responseMessage.Content.ReadAsStringAsync();
                 DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
@@ -165,7 +183,7 @@ namespace Connection
                     });
                 }
 
-                return itemsModel;
+                return itemsModel.OrderBy(key => key.Name).ToList();
             }
             catch
             {
@@ -176,7 +194,7 @@ namespace Connection
         public async Task<List<ItemModel>> GetAll(string name, string siteId, string listId, string fileId)
         {
 
-            HttpResponseMessage responseMessage = await _httpClient.GetAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{fileId}')/children");
+            HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{fileId}')/children");
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
             DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
@@ -208,7 +226,7 @@ namespace Connection
                     });
             }
 
-            return items;
+            return items.OrderBy(key => key.Name).ToList();
         }
 
         public async Task SaveDelete(string siteId, string listId, ItemModel item, bool overwrite)
@@ -217,7 +235,7 @@ namespace Connection
             if (string.IsNullOrEmpty(item.ID))
                 return;
 
-            HttpResponseMessage responseMessage = await _httpClient.GetAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{item.ID}')");
+            HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{item.ID}')");
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
             ItemShareModel file = JsonConvert.DeserializeObject<ItemShareModel>(responseContent)!;
 
@@ -228,32 +246,26 @@ namespace Connection
                 Name = item.Name
             };
 
-            if(await _FileShare.AddFile(fileModel, overwrite))
+            if (await _FileShare.AddFile(fileModel, overwrite))
                 await Delete(siteId, listId, item.ID);
 
         }
 
-        public async Task Delete(string siteId, string listId, string itemId)
+        public async Task<bool> DeleteSubFolderEmpty(string siteId, string listId, string folderId)
         {
-            await _httpClient.DeleteAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{itemId}')");
-             //await _microsoft.Sites[siteId].Lists[listId].Drive.Items[itemId].Request().DeleteAsync();
-        }
-
-        public async Task DeleteSubFolderEmpty(string siteId, string listId, string folderId)
-        {
-            HttpResponseMessage responseMessage = await _httpClient.GetAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderId}')");
+            HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderId}')");
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
             ItemShareModel root = JsonConvert.DeserializeObject<ItemShareModel>(responseContent)!;
 
-            if (root.folder.childCount == 0)
-            {
-                await Delete(siteId, listId, folderId);
-            }
+            if (root.folder.childCount > 0)
+                return false;
 
+            await Delete(siteId, listId, folderId);
+
+            return true;
         }
 
-
-
-
+        public async Task Delete(string siteId, string listId, string itemId)
+            => await DeleteData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{itemId}')");
     }
 }

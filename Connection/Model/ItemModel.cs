@@ -11,5 +11,6 @@ public class ItemModel
     public string? FolderID { get; set; }
     public int Count { get; set; } = 0;
     public bool ShowDiv { get; set; } = false;
+    public bool IsDeleted { get; set; } = false;
 
 }

@@ -70,30 +70,33 @@ public partial class Index
 
             allfiles.AddRange(await _sharePointGraph.GetAll(Site.Name.Replace("|", "/"), Site.ID, Site.ListID, Site.FolderID));
             allfiles.Reverse();
-            //List<Task> task = new();
+
+            List<Task> task = new();
 
             TotalFile = allfiles.Count();
             this.StateHasChanged();
 
             foreach (ItemModel file in allfiles)
-            {
-                await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, Overwrite);
-                FileCount++;
-                Percentage = (100 * FileCount) / TotalFile;
-                this.StateHasChanged();
-            }
+                task.Add(Task.Factory.StartNew(async () =>
+                {
+                    await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, Overwrite);
+                    FileCount++;
+                    Percentage = (100 * FileCount) / TotalFile;
+                    this.StateHasChanged();
+                }));
 
-            //Task.WaitAll(task.ToArray());
+            await Task.WhenAll(task.ToArray());
 
-            allfiles = allfiles.Where(x => !string.IsNullOrEmpty(x.FolderID)).ToList();
+            List<ItemModel> folders = allfiles.Where(x => !string.IsNullOrEmpty(x.FolderID)).ToList();
 
-            foreach (ItemModel file in allfiles)
-                await _sharePointGraph.DeleteSubFolderEmpty(Site.ID, Site.ListID, file.FolderID);
+            while (folders.Any(key => !key.IsDeleted))
+                foreach (ItemModel file in folders.Where(key => !key.IsDeleted))
+                    file.IsDeleted = await _sharePointGraph.DeleteSubFolderEmpty(Site.ID, Site.ListID, file.FolderID);
 
             Loading = false;
             this.StateHasChanged();
 
-            await JS.InvokeAsync<object>("Return");
+            await JS.InvokeVoidAsync("window.history.back()");
 
         }
         catch (Exception e)
