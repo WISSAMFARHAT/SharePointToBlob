@@ -82,7 +82,8 @@ public partial class Index
                     await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, Overwrite);
                     FileCount++;
                     Percentage = (100 * FileCount) / TotalFile;
-                    this.StateHasChanged();
+
+                    await InvokeAsync(() => this.StateHasChanged());
                 }));
 
             await Task.WhenAll(task.ToArray());
