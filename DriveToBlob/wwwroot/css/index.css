@@ -13,11 +13,13 @@
   --maxWidth: 1200px;
 }
 body main .sites-info {
-  margin-block: 50px;
+  margin-block: 30px 50px;
 }
 body main .sites-info-search {
-  width: 100%;
+  width: auto;
   display: flex;
+  margin-inline: auto;
+  position: relative;
 }
 body main .sites-info-search input {
   max-width: 150px;
@@ -150,4 +152,12 @@ body main .loadingPopup-close button {
 }
 body main .loadingPopup-close button:hover {
   color: var(--secondaryColor);
+}
+body main .loadingPopup-error {
+  width: fit-content;
+  margin-inline: auto;
+}
+body main .loadingPopup-error span {
+  font-size: 1rem;
+  color: var(--redColor);
 }

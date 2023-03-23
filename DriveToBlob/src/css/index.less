@@ -4,11 +4,13 @@ body {
     main {
         .sites {
             &-info {
-                margin-block: 50px;
+                margin-block: 30px 50px;
 
                 &-search {
-                    width: 100%;
-                    display:flex;
+                    width: auto;
+                    display: flex;
+                    margin-inline:auto;
+                    position:relative;
                     input {
                         max-width: 150px;
                         width: 100%;
@@ -19,9 +21,10 @@ body {
                         font-size: 1rem;
                         color: var(--blackColor);
                         margin-inline: auto;
-                        transition:all var(--duration);
-                        &:focus{
-                           max-width:400px;
+                        transition: all var(--duration);
+                        
+                        &:focus {
+                            max-width: 400px;
                         }
                     }
                 }
@@ -158,6 +161,15 @@ body {
                     &:hover {
                         color: var(--secondaryColor);
                     }
+                }
+            }
+
+            &-error{
+                width:fit-content;
+                margin-inline:auto;
+                span{
+                    font-size:1rem;
+                    color:var(--redColor);
                 }
             }
         }

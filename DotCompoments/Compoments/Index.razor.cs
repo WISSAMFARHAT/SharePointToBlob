@@ -3,6 +3,7 @@ using Connection.Model;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System;
+using System.Drawing;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DotCompoments.Compoments;
@@ -10,14 +11,16 @@ public partial class Index
 {
     [Parameter] public SiteModel? Site { get; set; }
     public List<ItemModel>? Items { get; set; }
-
+    public List<ItemModel>? TempItems { get; set; }
     public bool Loading { get; set; } = false;
     public bool Overwrite { get; set; } = false;
     public int TotalFile { get; set; } = 0;
+    public string? DisplayTotalSize { get; set; }
+    public long? TotalSize { get; set; } = 0;
     public int FileCount { get; set; } = 0;
     public int Percentage { get; set; } = 0;
-
     public string Url { get; set; } = $"";
+    public string ErrorDescription { get; set; }
     protected override async Task OnInitializedAsync()
     {
 
@@ -42,18 +45,34 @@ public partial class Index
             Items = await _sharePointGraph.GetAllItemsFolder(Site.ID, Site.ListID, Site.FolderID);
             Url += $"/{Site.ID}/{Site.ListID}";
         }
+
+        TempItems = Items;
+
+        TotalSize = Items.Sum(x => x.Size);
+
+        if (TotalSize == 0)
+            DisplayTotalSize = "0 KB";
+        else if (TotalSize < 1024 * 1024)
+            DisplayTotalSize = $"({(TotalSize / 1024.0)?.ToString("0.00")}) KB";
+        else if (TotalSize < 1024 * 1024 * 1024)
+            DisplayTotalSize = $"({(TotalSize / ((1024.0 * 1024.0)))?.ToString("0.00")}) MB";
+        else
+            DisplayTotalSize = $"({(TotalSize / ((1024.0 * 1024.0 * 1024.0)))?.ToString("0.00")}) GB";
+
+        this.StateHasChanged();
     }
-
-
+    public async Task Search(ChangeEventArgs e)
+    {
+        TempItems =Items.Where(x => x.Name.ToLower().StartsWith(e.Value.ToString().ToLower())).ToList();
+        this.StateHasChanged();
+    }
     public void Close()
     {
         Loading = false;
         this.StateHasChanged();
     }
-
     public async Task Archive()
     {
-
         try
         {
             List<ItemModel> allfiles = new()
@@ -100,9 +119,10 @@ public partial class Index
             await JS.InvokeVoidAsync("Return");
 
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            await JS.InvokeAsync<object>("Refresh");
+            ErrorDescription=ex.Message;
+            //await JS.InvokeAsync<object>("Refresh");
         }
 
     }

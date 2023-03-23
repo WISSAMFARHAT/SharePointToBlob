@@ -13,17 +13,17 @@
                         Overwrite:
                         <input type="checkbox" @bind="Overwrite" style="appearance:auto;cursor:pointer">
                     </label>
-                    <button @onclick="Archive" class="--button _secondary">Archive</button>
+                    <button @onclick="Archive" class="--button _secondary"><span>Archive</span> <span>@DisplayTotalSize</span></button>
                 }
             </div>
             <h1> @(string.IsNullOrEmpty(Site.Name) ? "Site" : Site.Name) </h1>
 
             <div class="sites-info">
                 <div class="sites-info-search">
-                    <input type="text" />
+                    <input type="text" placeholder="Search by Name..." @oninput="Search" />
                 </div>
                 <div class="sites-info-description">
-                    @foreach (ItemModel item in Items)
+                    @foreach (ItemModel item in TempItems)
                     {
                         @if (!string.IsNullOrEmpty(item.Name))
                         {
@@ -50,28 +50,7 @@
                                         <div>
                                             <p>@item.Count items</p>
                                             <span>
-                                                @if (item.Size == 0)
-                                                {
-                                                    <span> 0 KB</span>
-                                                }
-                                                else if (item.Size < 1024 * 1024)
-                                                {
-                                                    <span>
-                                                        @((item.Size / 1024.0)?.ToString("0.00")) KB
-                                                    </span>
-                                                }
-                                                else if (item.Size < 1024 * 1024 * 1024)
-                                                {
-                                                    <span>
-                                                        @((item.Size / ((1024.0 * 1024.0)))?.ToString("0.00")) MB
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span>
-                                                        @((item.Size / ((1024.0 * 1024.0 * 1024.0)))?.ToString("0.00")) GB
-                                                    </span>
-                                                }
+                                                @item.DisplaySize
                                             </span>
                                         </div>
                                     }
@@ -98,6 +77,9 @@ else
 {
     <section class="loadingPopup">
         <article>
+            <div class="loadingPopup-close">
+                <button @onclick="Close">X</button>
+            </div>
             <div class="loadingPopup-details">
                 <div>
                     <p>@FileCount/@TotalFile</p>
@@ -109,10 +91,12 @@ else
             <div class="loadingPopup-loading">
                 <DotCompoments.Compoments.Assets.Logo />
             </div>
-            <div class="loadingPopup-close">
-                <button @onclick="Close">X</button>
-            </div>
+            @if (!string.IsNullOrEmpty(ErrorDescription))
+            {
+                <div class="loadingPopup-error">
+                    <span>Error: @ErrorDescription </span>
+                </div>
+            }
         </article>
-
     </section>
 }
