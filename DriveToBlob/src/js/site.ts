@@ -24,11 +24,12 @@ export function scrollToSection(id) {
 
 
 export function Return() {
-    const path = window.location.pathname;
-    let parts = path.split("/"); 
-    let newpath = parts.slice(0, -1).join("/") + "/";
+    //const path = window.location.pathname;
+    //let parts = path.split("/");
+    //let newpath = parts.slice(0, -1).join("/") + "/";
 
-    window.location.href = newpath;
+    //window.location.href = newpath;
+    window.history.back();
 }
 
 export function Refresh() {

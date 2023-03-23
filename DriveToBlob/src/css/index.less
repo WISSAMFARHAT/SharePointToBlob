@@ -5,11 +5,35 @@ body {
         .sites {
             &-info {
                 margin-block: 50px;
-                display: grid;
-                grid-template-columns: repeat(4,1fr);
-                align-items: stretch;
-                justify-content: center;
-                gap: 20px;
+
+                &-search {
+                    width: 100%;
+                    display:flex;
+                    input {
+                        max-width: 150px;
+                        width: 100%;
+                        padding: 5px;
+                        border: 1px solid var(--primaryColor);
+                        background-color: transparent;
+                        border-radius: 5px;
+                        font-size: 1rem;
+                        color: var(--blackColor);
+                        margin-inline: auto;
+                        transition:all var(--duration);
+                        &:focus{
+                           max-width:400px;
+                        }
+                    }
+                }
+
+                &-description {
+                    margin-top: 30px;
+                    display: grid;
+                    grid-template-columns: repeat(4,1fr);
+                    align-items: stretch;
+                    justify-content: center;
+                    gap: 20px;
+                }
             }
 
             &-button {

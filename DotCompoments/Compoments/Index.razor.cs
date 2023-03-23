@@ -96,7 +96,7 @@ public partial class Index
             Loading = false;
             this.StateHasChanged();
 
-            await JS.InvokeVoidAsync("window.history.back()");
+            await JS.InvokeVoidAsync("Return");
 
         }
         catch (Exception e)
