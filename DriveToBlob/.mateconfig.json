@@ -20,10 +20,6 @@
 		{
 			"output": "wwwroot/js/site.js",
 			"input": "src/js/site.ts"
-		},
-		{
-			"output": "wwwroot/js/index.js",
-			"input": "src/js/index.js"
 		}
 	],
 	"images": [

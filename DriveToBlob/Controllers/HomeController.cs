@@ -14,7 +14,7 @@ namespace DriveToBlob.Controllers
     {
 
         [Route("{Name?}/{ID?}/{ListID?}/{FolderID?}")]
-        public async Task<IActionResult> Index(string Name, string ID, string ListID, string FolderID)
+        public async Task<IActionResult> Index(string? Name, string ID, string ListID, string FolderID)
         {
             CloudPage(string.IsNullOrEmpty(Name)? String.Empty: Name);
 
