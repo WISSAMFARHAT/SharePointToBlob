@@ -1,4 +1,148 @@
 :root {
+  -webkit-tap-highlight-color: transparent;
+  /* Consistent line spacing, which does not unnecessarily grow to accommodate things that would fit anyway */
+  /* From CSS Inline Layout Module Level 3: https://drafts.csswg.org/css-inline-3/#line-sizing-property */
+  line-sizing: normal;
+  /* Improve spacing of punctuation marks and at script changes in CJK languages */
+  /* From CSS Text Module Level 4: https://drafts.csswg.org/css-text-4/#text-spacing-property */
+  text-spacing: trim-start allow-end trim-adjacent ideograph-alpha ideograph-numeric;
+}
+body > header,
+body > footer {
+  user-select: none;
+}
+button,
+a {
+  user-select: none;
+}
+html {
+  height: 100%;
+}
+html,
+body {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+html ._noscroll,
+body ._noscroll {
+  overflow: hidden;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+h1 {
+  font-size: 2rem;
+  margin: 0.67em 0;
+}
+h2 {
+  font-size: 1.5rem;
+}
+h3 {
+  font-size: 1.17rem;
+}
+h4 {
+  font-size: 1rem;
+}
+h5 {
+  font-size: 0.83rem;
+}
+h6 {
+  font-size: 0.67rem;
+}
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1;
+}
+pre {
+  white-space: pre-wrap;
+}
+hr {
+  border: 0.5px solid;
+}
+*:focus,
+*:active {
+  outline: none;
+}
+input,
+select,
+textarea,
+button {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border-radius: 0;
+  -moz-border-radius: 0;
+  -webkit-border-radius: 0;
+}
+a,
+a:focus,
+a:active,
+a:visited,
+a:hover {
+  text-decoration: none;
+}
+img,
+video,
+canvas,
+audio,
+iframe,
+embed,
+object {
+  display: block;
+  /* Switch display mode to block, since that's what we usually want for images. */
+  vertical-align: middle;
+  /* If you override, and make an image inline, it's likely you'll want middle vertical alignment. */
+}
+img,
+video {
+  max-width: 100%;
+  /* Make images and video flexible by default. */
+  height: auto;
+  /* Ensure images and video maintain their aspect ratio when max-width comes into play. */
+}
+img {
+  display: inline-block;
+  max-width: 100%;
+}
+[disabled="disabled"] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+textarea {
+  resize: none;
+}
+code,
+kbd,
+samp {
+  font-family: monospace;
+  font-size: 1rem;
+}
+.HorizontalScrolling {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+section,
+aside {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+section article,
+aside article {
+  max-width: var(--maxWidth);
+  width: 100%;
+  overflow: hidden;
+}
+:root {
   --primaryColor: #2e3191;
   --primaryColorOpacity: #2e3191e6;
   --secondaryColor: #42a7de;
@@ -22,16 +166,6 @@ body {
 img {
   pointer-events: none;
 }
-body header,
-body footer {
-  width: 100%;
-}
-body header > div,
-body footer > div {
-  max-width: var(--maxWidth);
-  margin-inline: auto;
-  padding-inline: 20px;
-}
 body main {
   padding-top: var(--headerHeight);
   padding-bottom: 20px;
@@ -39,17 +173,10 @@ body main {
 body main section {
   width: 100%;
 }
-body main section > div,
-body main section > article {
-  max-width: var(--maxWidth);
-  margin-inline: auto;
-  padding-inline: 20px;
-}
 body .--button {
   width: 100%;
   max-width: 300px;
   overflow-wrap: anywhere;
-  width: 300px;
   padding-top: 10px;
   display: flex;
   align-items: center;
@@ -61,6 +188,9 @@ body .--button {
   transition: all var(--duration);
   cursor: pointer;
   position: relative;
+}
+body .--button > p {
+  padding-inline: 5px;
 }
 body .--button p,
 body .--button span {
@@ -169,6 +299,22 @@ body h1::before {
   height: 3px;
   background-color: var(--primaryColor);
 }
+body .--amc-stroke {
+  stroke: var(--primaryColor);
+  fill: transparent;
+}
+body .--amc-animation {
+  stroke-dasharray: 1000;
+  animation: dash 3s linear alternate infinite;
+}
+@keyframes dash {
+  from {
+    stroke-dashoffset: 1200;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
 @font-face {
   font-family: 'Lato';
   font-style: normal;
@@ -236,10 +382,18 @@ body h1::before {
 .fadein {
   transform: translateY(50px);
 }
+header {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  padding: 0;
+}
 .header {
   background-color: var(--primaryColorOpacity);
   height: var(--headerHeight);
   transition: all var(--duration);
+  z-index: 999999;
 }
 .header > div {
   width: 100%;
@@ -253,9 +407,6 @@ body h1::before {
   font-size: 2rem;
   color: var(--whiteColor);
   text-transform: capitalize;
-}
-._scroll body .header {
-  background-color: var(--primaryColorOpacity);
 }
 ._scroll body .header > div .logo {
   max-width: 100px;

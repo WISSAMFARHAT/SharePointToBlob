@@ -1,21 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>973135f6-7bff-4f13-9c1a-94b52bef6bcd</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AngryMonkey.CloudWeb" Version="1.0.2" />
-    <PackageReference Include="AngryMonkey.CloudWeb.MVC" Version="1.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="7.0.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Connection\Connection.csproj" />
-    <ProjectReference Include="..\DotCompoments\DotCompoments.csproj" />
   </ItemGroup>
 
 </Project>

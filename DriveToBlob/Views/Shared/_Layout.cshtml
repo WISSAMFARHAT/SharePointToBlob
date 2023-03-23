@@ -1,0 +1,16 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <component type="typeof(CloudHeadInit)" param-CloudPage="@(ViewData["CloudPageStatic"])" render-mode="Static" />
+</head>
+<body>
+    <partial name="Compoments/Header" />
+
+    <main>
+        @RenderBody()
+    </main>
+
+    <partial name="Compoments/Footer" />
+
+</body>
+</html>

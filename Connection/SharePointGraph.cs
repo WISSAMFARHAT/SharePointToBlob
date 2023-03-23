@@ -1,61 +1,47 @@
-﻿using Connection.Model;
-using Microsoft.Graph;
-using Microsoft.Identity.Client;
-using System.Net.Http.Headers;
-using Microsoft.SharePoint.Client;
-using static System.Net.Mime.MediaTypeNames;
+﻿using Azure;
 using Azure.Core;
-using System.Net.Http;
+using Azure.Identity;
+using Connection.Model;
+using Microsoft.Graph;
+using Microsoft.Graph.Models;
+using Microsoft.Identity.Client;
+using Microsoft.Kiota.Abstractions;
+using Microsoft.Kiota.Abstractions.Authentication;
 using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.Reflection.Metadata;
-using System.IO;
-using static System.Net.WebRequestMethods;
 using Newtonsoft.Json.Linq;
-using System.Drawing;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace Connection
 {
     public class SharePointGraph
     {
-        private string AppID { get; set; }
-        private string TenantID { get; set; }
-        private string AppSecret { get; set; }
-
         private string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
-        private IConfidentialClientApplication App { get; set; }
 
         private GraphServiceClient _microsoft;
 
-        private HttpClient httpClient = new();
+        private HttpClient _httpClient;
 
         private FileShare _FileShare { get; set; }
+
         public SharePointGraph(string appID, string tenantID, string appSecret, FileShare fileShare)
         {
+            var options = new TokenCredentialOptions
+            {
+                AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
+            };
 
-            AppID = appID;
-            TenantID = tenantID;
-            AppSecret = appSecret;
-            App = ConfidentialClientApplicationBuilder
-                .Create(AppID)
-                .WithTenantId(TenantID)
-                .WithClientSecret(AppSecret)
-                .Build();
+            ClientSecretCredential authProvider = new(tenantID, appID, appSecret, options);
 
-            AuthenticationResult result = App.AcquireTokenForClient(scopes).ExecuteAsync().Result;
+            _microsoft = new GraphServiceClient(authProvider, scopes);
 
-            // Initialize the Graph client
-            _microsoft = new GraphServiceClient(new DelegateAuthenticationProvider(
-                (requestMessage) =>
-                {
-                    requestMessage.Headers.Authorization = new AuthenticationHeaderValue("bearer", result.AccessToken);
-                    return Task.CompletedTask;
-                }));
+            string token = authProvider.GetToken(new TokenRequestContext(scopes)).Token;
 
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            httpClient.DefaultRequestHeaders.Authorization = new("Bearer", result.AccessToken);
+            _httpClient = new();
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            _microsoft.HttpProvider.OverallTimeout = TimeSpan.FromHours(1);
 
             _FileShare = fileShare;
         }
@@ -64,11 +50,12 @@ namespace Connection
         {
             try
             {
-                List<Microsoft.Graph.Site> sites = _microsoft.Sites.Request().GetAsync().Result.Where(x => x.WebUrl.Contains("/sites/")).ToList();
+                Microsoft.Graph.Models.SiteCollectionResponse sites = await _microsoft.Sites.GetAsync();
+                List<Microsoft.Graph.Models.Site> response = sites.Value.Where(x => x.WebUrl.Contains("/sites/")).ToList();
 
                 List<ItemModel> sitesModel = new();
 
-                foreach (Microsoft.Graph.Site? site in sites)
+                foreach (var site in response)
                 {
                     sitesModel.Add(new()
                     {
@@ -86,14 +73,17 @@ namespace Connection
             }
         }
 
+
         public async Task<List<ItemModel>> GetAllListSide(string ID)
         {
             try
             {
-                List<Microsoft.Graph.List> lists = _microsoft.Sites[ID].Lists.Request().GetAsync().Result.Where(x => !x.WebUrl.Contains("/Lists/")).ToList();
+                ListCollectionResponse? lists = await _microsoft.Sites[ID].Lists.GetAsync();
+                List<List> response = lists.Value.Where(x => !x.WebUrl.Contains("/Lists/")).ToList();
+
                 List<ItemModel> listModel = new();
 
-                foreach (var list in lists)
+                foreach (List list in response)
                 {
 
                     listModel.Add(new()
@@ -111,53 +101,22 @@ namespace Connection
                 return new();
             }
         }
-        public async Task<List<ItemModel>> GetAllFolderList(string ID, string listID)
+        public async Task<List<ItemModel>> GetAllFolderList(string siteId, string listId)
         {
             try
             {
-                IDriveItemChildrenCollectionPage items = await _microsoft.Sites[ID].Lists[listID].Drive.Root.Children.Request().GetAsync();
-                List<ItemModel> itemsModel = new();
-
-                foreach (var item in items)
-                {
-                    int count = 0;
-
-                    if (item.Folder != null)
-                        count = item.Folder.ChildCount ?? 0;
-
-                    itemsModel.Add(new()
-                    {
-                        ID = item.Id,
-                        Name = item.Name,
-                        WebUrl = item.WebUrl,
-                        Size = item.Size,
-                        Count = count,
-                        ShowDiv=true,
-                    });
-                }
-
-                return itemsModel;
-            }
-            catch
-            {
-                return new();
-            }
-        }
-
-        public async Task<List<ItemModel>> GetAllItemsFolder(string ID, string listID, string folderID)
-        {
-            try
-            {
-                var items = await _microsoft.Sites[ID].Lists[listID].Drive.Items[folderID].Children.Request().GetAsync();
+               
+                HttpResponseMessage responseMessage = await _httpClient.GetAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/root/children");
+                string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
                 List<ItemModel> itemsModel = new();
 
-                foreach (var item in items)
+                foreach (DriveModel.Values item in root.Value)
                 {
                     int count = 0;
-
-                    if (item.Folder != null)
-                        count = item.Folder.ChildCount ?? 0;
+                    if (item.Folder!=null)
+                        count = item.Folder.ChildCount;
 
                     itemsModel.Add(new()
                     {
@@ -178,14 +137,52 @@ namespace Connection
             }
         }
 
-        public async Task<List<ItemModel>> GetAll(string name, string ID, string listID, string fileID)
+        public async Task<List<ItemModel>> GetAllItemsFolder(string siteId, string listId, string folderID)
         {
-            IDriveItemChildrenCollectionPage folderContents =
-                await _microsoft.Sites[ID].Lists[listID].Drive.Items[fileID].Children.Request().GetAsync();
+            try
+            {
+                HttpResponseMessage responseMessage = await _httpClient.GetAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderID}')/children");
+                string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
+
+                List<ItemModel> itemsModel = new();
+
+                foreach (DriveModel.Values item in root.Value)
+                {
+                    int count = 0;
+
+                    if (item.Folder != null)
+                        count = item.Folder.ChildCount;
+
+                    itemsModel.Add(new()
+                    {
+                        ID = item.Id,
+                        Name = item.Name,
+                        WebUrl = item.WebUrl,
+                        Size = item.Size,
+                        Count = count,
+                        ShowDiv = true,
+                    });
+                }
+
+                return itemsModel;
+            }
+            catch
+            {
+                return new();
+            }
+        }
+
+        public async Task<List<ItemModel>> GetAll(string name, string siteId, string listId, string fileId)
+        {
+
+            HttpResponseMessage responseMessage = await _httpClient.GetAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{fileId}')/children");
+            string responseContent = await responseMessage.Content.ReadAsStringAsync();
+            DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
             List<ItemModel> items = new();
 
-            foreach (var item in folderContents)
+            foreach (DriveModel.Values item in root.Value)
             {
                 string folderName = $"{name}/";
 
@@ -199,7 +196,8 @@ namespace Connection
                         Name = folderName,
                         WebUrl = item.WebUrl,
                     });
-                    items.AddRange(await GetAll(folderName, ID, listID, item.Id));
+
+                    items.AddRange(await GetAll(folderName, siteId, listId, item.Id));
                 }
                 else
                     items.Add(new()
@@ -213,41 +211,43 @@ namespace Connection
             return items;
         }
 
-        public async Task SaveDelete(string ID, string listID, ItemModel item, bool overwrite)
+        public async Task SaveDelete(string siteId, string listId, ItemModel item, bool overwrite)
         {
             // If Folder
             if (string.IsNullOrEmpty(item.ID))
-                //await DeleteSubFolderEmpty(ID, listID, item.FolderID);
                 return;
 
-
-            DriveItem files = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Request().GetAsync();
-            string urldownload = files.AdditionalData["@microsoft.graph.downloadUrl"].ToString();
-
-            //Stream file = await _microsoft.Sites[ID].Lists[listID].Drive.Items[item.ID].Content.Request().GetAsync();
+            HttpResponseMessage responseMessage = await _httpClient.GetAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{item.ID}')");
+            string responseContent = await responseMessage.Content.ReadAsStringAsync();
+            ItemShareModel file = JsonConvert.DeserializeObject<ItemShareModel>(responseContent)!;
 
             FileModel fileModel = new()
             {
-                FileUrl = urldownload,
-                FileLength = files.Size ?? 0,
+                FileUrl = file.microsoftgraphdownloadUrl,
+                FileLength = file.size,
                 Name = item.Name
             };
 
-            if (await _FileShare.AddFile(fileModel, overwrite))
-                await Delete(ID, listID, item.ID);
+            if(await _FileShare.AddFile(fileModel, overwrite))
+                await Delete(siteId, listId, item.ID);
+
         }
 
-        public async Task Delete(string ID, string listID, string itemID) =>
-         await _microsoft.Sites[ID].Lists[listID].Drive.Items[itemID].Request().DeleteAsync();
-
-        public async Task DeleteSubFolderEmpty(string ID, string listID, string folderID)
+        public async Task Delete(string siteId, string listId, string itemId)
         {
-            IDriveItemChildrenCollectionPage folderContents =
-               await _microsoft.Sites[ID].Lists[listID].Drive.Items[folderID].Children.Request().GetAsync();
+            await _httpClient.DeleteAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{itemId}')");
+             //await _microsoft.Sites[siteId].Lists[listId].Drive.Items[itemId].Request().DeleteAsync();
+        }
 
-            if (folderContents.Count == 0)
+        public async Task DeleteSubFolderEmpty(string siteId, string listId, string folderId)
+        {
+            HttpResponseMessage responseMessage = await _httpClient.GetAsync($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderId}')");
+            string responseContent = await responseMessage.Content.ReadAsStringAsync();
+            ItemShareModel root = JsonConvert.DeserializeObject<ItemShareModel>(responseContent)!;
+
+            if (root.folder.childCount == 0)
             {
-                await Delete(ID, listID, folderID);
+                await Delete(siteId, listId, folderId);
             }
 
         }

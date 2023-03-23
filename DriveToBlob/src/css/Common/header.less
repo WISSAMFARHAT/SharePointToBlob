@@ -1,10 +1,12 @@
-﻿@import "variable.less";
+﻿@import url('https://cdn.amcapi.com/cloudweb/1.0.2/cloud-header.less');
+@import "variable.less";
 
 
 .header {
     background-color: var(--primaryColorOpacity);
     height: var(--headerHeight);
     transition: all var(--duration);
+    z-index: 999999;
 
     > div {
         width: 100%;
@@ -13,10 +15,11 @@
         align-items: center;
         padding-block: 20px 10px;
         transition: all var(--duration);
-        a{
-            font-size:2rem;
-            color:var(--whiteColor);
-            text-transform:capitalize;
+
+        a {
+            font-size: 2rem;
+            color: var(--whiteColor);
+            text-transform: capitalize;
         }
     }
 }
@@ -26,8 +29,6 @@
 ._scroll {
     body {
         .header {
-            background-color: var(--primaryColorOpacity);
-
             > div {
                 .logo {
                     max-width: 100px;

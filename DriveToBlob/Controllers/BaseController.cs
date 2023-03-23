@@ -1,6 +1,8 @@
-﻿namespace Website.Controllers;
+﻿using AngryMonkey.CloudMVC;
 
-public class BaseController : CoreController
+namespace Website.Controllers;
+
+public class BaseController : CloudController
 {
 }
 

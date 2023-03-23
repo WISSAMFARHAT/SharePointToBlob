@@ -1,22 +1,6 @@
-﻿using Azure;
-using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
-using Azure.Storage.Files.Shares;
+﻿using Azure.Storage.Files.Shares;
 using Azure.Storage.Files.Shares.Models;
 using Connection.Model;
-using Microsoft.Graph;
-using Microsoft.Identity.Client;
-using Microsoft.SharePoint.Client;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
-using System;
-using System.Collections.Generic;
-using System.Formats.Asn1;
-using System.IO;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Connection
 {
@@ -77,19 +61,19 @@ namespace Connection
                 await fileClient.CreateAsync(file.FileLength);
                 var result = await fileClient.StartCopyAsync(new Uri(file.FileUrl));
 
-                // Wait for the copy operation to complete
-                ShareFileProperties destinationProperties;
+                //// Wait for the copy operation to complete
+                //ShareFileProperties destinationProperties;
 
-                do
-                {
-                    destinationProperties = await fileClient.GetPropertiesAsync();
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                }
-                while (destinationProperties.CopyStatus == Azure.Storage.Files.Shares.Models.CopyStatus.Pending);
+                //do
+                //{
+                //    destinationProperties = await fileClient.GetPropertiesAsync();
+                //    await Task.Delay(TimeSpan.FromSeconds(1));
+                //}
+                //while (destinationProperties.CopyStatus == Azure.Storage.Files.Shares.Models.CopyStatus.Pending);
 
-                // Check if the copy operation succeeded or failed
-                if (destinationProperties.CopyStatus != Azure.Storage.Files.Shares.Models.CopyStatus.Success)
-                    return false;
+                //// Check if the copy operation succeeded or failed
+                //if (destinationProperties.CopyStatus != Azure.Storage.Files.Shares.Models.CopyStatus.Success)
+                //    return false;
                 
                     return true;
 

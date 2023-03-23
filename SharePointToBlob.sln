@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharePointToBlob", "DriveTo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Connection", "Connection\Connection.csproj", "{77EB9495-95A3-4B32-AA0F-0F5CCB04E3E8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotCompoments", "DotCompoments\DotCompoments.csproj", "{FE97ED51-A673-4DF1-9233-1B0B0497636C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{77EB9495-95A3-4B32-AA0F-0F5CCB04E3E8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77EB9495-95A3-4B32-AA0F-0F5CCB04E3E8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77EB9495-95A3-4B32-AA0F-0F5CCB04E3E8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE97ED51-A673-4DF1-9233-1B0B0497636C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE97ED51-A673-4DF1-9233-1B0B0497636C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE97ED51-A673-4DF1-9233-1B0B0497636C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE97ED51-A673-4DF1-9233-1B0B0497636C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
