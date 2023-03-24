@@ -199,6 +199,10 @@ body .--button span {
   font-size: 1rem;
   margin: 0;
 }
+body .--button p:last-child,
+body .--button span:last-child {
+  font-size: 0.9em;
+}
 body .--button._primary {
   border-color: var(--primaryColor);
 }
