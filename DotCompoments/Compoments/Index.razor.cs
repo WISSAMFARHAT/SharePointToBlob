@@ -71,22 +71,33 @@ public partial class Index
             allfiles.AddRange(await _sharePointGraph.GetAll(Site.Name.Replace("|", "/"), Site.ID, Site.ListID, Site.FolderID));
             allfiles.Reverse();
 
-            List<Task> task = new();
+            List<Task> tasks = new();
+            int parallelTasksCount = 0;
+            int maxParallelTasks = 20;
 
-            TotalFile = allfiles.Count();
+            TotalFile = allfiles.Count;
             this.StateHasChanged();
 
             foreach (ItemModel file in allfiles)
-                task.Add(Task.Factory.StartNew(async () =>
+            {
+                if (parallelTasksCount >= maxParallelTasks)
+                    await Task.WhenAny(tasks);
+
+                parallelTasksCount++;
+
+                tasks.Add(Task.Factory.StartNew(async () =>
                 {
                     await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, Overwrite);
+                    parallelTasksCount--;
+
                     FileCount++;
                     Percentage = (100 * FileCount) / TotalFile;
 
                     await InvokeAsync(() => this.StateHasChanged());
                 }));
+            }
 
-            await Task.WhenAll(task.ToArray());
+            await Task.WhenAll(tasks.ToArray());
 
             List<ItemModel> folders = allfiles.Where(x => !string.IsNullOrEmpty(x.FolderID)).ToList();
 
