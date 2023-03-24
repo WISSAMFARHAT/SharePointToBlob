@@ -92,10 +92,10 @@ public partial class Index
 
             List<Task> tasks = new();
             int parallelTasksCount = 0;
-            int maxParallelTasks = 20;
+            int maxParallelTasks = 6;
 
             TotalFile = allfiles.Count;
-            this.StateHasChanged();
+            StateHasChanged();
 
             foreach (ItemModel file in allfiles)
             {
@@ -110,9 +110,9 @@ public partial class Index
                     parallelTasksCount--;
 
                     FileCount++;
-                    Percentage = (100 * FileCount) / TotalFile;
+                    Percentage = 100 * FileCount / TotalFile;
 
-                    await InvokeAsync(() => this.StateHasChanged());
+                    await InvokeAsync(() => StateHasChanged());
                 }));
             }
 
