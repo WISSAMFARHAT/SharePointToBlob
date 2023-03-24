@@ -63,7 +63,7 @@ public partial class Index
     }
     public async Task Search(ChangeEventArgs e)
     {
-        TempItems =Items.Where(x => x.Name.ToLower().StartsWith(e.Value.ToString().ToLower())).ToList();
+        TempItems = Items.Where(x => x.Name.ToLower().StartsWith(e.Value.ToString().ToLower())).ToList();
         this.StateHasChanged();
     }
     public void Close()
@@ -132,7 +132,7 @@ public partial class Index
         }
         catch (Exception ex)
         {
-            ErrorDescription=ex.Message;
+            ErrorDescription = ex.Message;
             //await JS.InvokeAsync<object>("Refresh");
         }
 

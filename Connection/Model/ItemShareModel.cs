@@ -22,7 +22,7 @@ public class ItemShareModel
     public string name { get; set; }
     public string webUrl { get; set; }
     public string cTag { get; set; }
-    public int size { get; set; }
+    public long size { get; set; }
     public CreatedBy createdBy { get; set; }
     public LastModifiedBy lastModifiedBy { get; set; }
     public ParentReference parentReference { get; set; }
