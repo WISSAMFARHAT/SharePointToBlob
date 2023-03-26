@@ -82,15 +82,28 @@ else
             </div>
             <div class="loadingPopup-details">
                 <div>
-                    <p>@FileCount/@TotalFile</p>
+                    <p>@ProgressTitle</p>
                 </div>
                 <div>
                     <span style="--percentage:@Percentage%;"></span>
                 </div>
             </div>
-            <div class="loadingPopup-loading">
-                <DotCompoments.Compoments.Assets.Logo />
-            </div>
+
+            @if (TransferFailedFiles.Any())
+            {
+                <div>Failed Files:</div>
+                foreach (string file in TransferFailedFiles)
+                {
+                    <div>@file</div>
+                }
+            }
+            else
+            {
+                <div class="loadingPopup-loading">
+                    <DotCompoments.Compoments.Assets.Logo />
+                </div>
+            }
+
             @if (!string.IsNullOrEmpty(ErrorDescription))
             {
                 <div class="loadingPopup-error">

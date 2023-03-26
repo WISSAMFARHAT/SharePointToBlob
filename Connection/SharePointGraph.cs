@@ -229,11 +229,11 @@ namespace Connection
             return items.OrderBy(key => key.Name).ToList();
         }
 
-        public async Task SaveDelete(string siteId, string listId, ItemModel item, bool overwrite)
+        public async Task<bool> SaveDelete(string siteId, string listId, ItemModel item, bool overwrite)
         {
             // If Folder
             if (string.IsNullOrEmpty(item.ID))
-                return;
+                return true;
 
             HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{item.ID}')");
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
@@ -247,8 +247,12 @@ namespace Connection
             };
 
             if (await _FileShare.AddFile(fileModel, overwrite))
+            {
                 await Delete(siteId, listId, item.ID);
+                return true;
+            }
 
+            return false;
         }
 
         public async Task<bool> DeleteSubFolderEmpty(string siteId, string listId, string folderId)
@@ -257,7 +261,7 @@ namespace Connection
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
             ItemShareModel root = JsonConvert.DeserializeObject<ItemShareModel>(responseContent)!;
 
-            if (root.folder.childCount > 0)
+            if (root.folder == null || root.folder.childCount > 0)
                 return false;
 
             await Delete(siteId, listId, folderId);

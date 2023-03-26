@@ -16,11 +16,16 @@ public partial class Index
     public bool Overwrite { get; set; } = false;
     public int TotalFile { get; set; } = 0;
     public string? DisplayTotalSize { get; set; }
+    public string ProgressTitle => Finalizing ? "Finalizing" : (TotalFile == 0 ? "Gathering files" : $"{FileCount}/{TotalFile} ({TransferTasks.Count} running tasks)");
+    public bool Finalizing { get; set; } = false;
     public long? TotalSize { get; set; } = 0;
     public int FileCount { get; set; } = 0;
     public int Percentage { get; set; } = 0;
+    public List<string> TransferFailedFiles { get; set; } = new();
     public string Url { get; set; } = $"";
     public string ErrorDescription { get; set; }
+    private List<Task> TransferTasks { get; set; } = new();
+
     protected override async Task OnInitializedAsync()
     {
 
@@ -90,8 +95,11 @@ public partial class Index
             allfiles.AddRange(await _sharePointGraph.GetAll(Site.Name.Replace("|", "/"), Site.ID, Site.ListID, Site.FolderID));
             allfiles.Reverse();
 
-            List<Task> tasks = new();
-            int parallelTasksCount = 0;
+            TransferTasks = new();
+            TransferFailedFiles = new();
+            Finalizing = false;
+            FileCount = 0;
+            Percentage = 0;
             int maxParallelTasks = 6;
 
             TotalFile = allfiles.Count;
@@ -99,24 +107,35 @@ public partial class Index
 
             foreach (ItemModel file in allfiles)
             {
-                if (parallelTasksCount >= maxParallelTasks)
-                    await Task.WhenAny(tasks);
-
-                parallelTasksCount++;
-
-                tasks.Add(Task.Factory.StartNew(async () =>
+                while (TransferTasks.Count >= maxParallelTasks)
                 {
-                    await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, Overwrite);
-                    parallelTasksCount--;
+                    await Task.WhenAny(TransferTasks);
+                    TransferTasks.RemoveAll(task => task.IsCompleted);
+                }
 
-                    FileCount++;
-                    Percentage = 100 * FileCount / TotalFile;
+                TransferTasks.Add(Task.Factory.StartNew(async () =>
+                {
+                    bool transfered = await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, Overwrite);
+
+                    if (!transfered)
+                        TransferFailedFiles.Add($"{file.Name} [{file.DisplaySize}]");
+
+                    Percentage = 100 * FileCount++ / TotalFile;
 
                     await InvokeAsync(() => StateHasChanged());
                 }));
+
+                StateHasChanged();
             }
 
-            await Task.WhenAll(tasks.ToArray());
+            while (FileCount < TotalFile)
+                await Task.Delay(TimeSpan.FromSeconds(1));
+
+            await Task.WhenAll(TransferTasks);
+
+            Finalizing = true;
+
+            StateHasChanged();
 
             List<ItemModel> folders = allfiles.Where(x => !string.IsNullOrEmpty(x.FolderID)).ToList();
 
