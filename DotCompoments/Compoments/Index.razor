@@ -91,11 +91,13 @@ else
 
             @if (TransferFailedFiles.Any())
             {
-                <div>Failed Files:</div>
-                foreach (string file in TransferFailedFiles)
-                {
-                    <div>@file</div>
-                }
+                <div class="loadingPopup-failed">
+                    <div>Failed Files:</div>
+                    @foreach (string file in TransferFailedFiles)
+                    {
+                        <span>@file</span>
+                    }
+                </div>
             }
             else
             {

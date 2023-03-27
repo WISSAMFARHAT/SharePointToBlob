@@ -161,3 +161,17 @@ body main .loadingPopup-error span {
   font-size: 1rem;
   color: var(--redColor);
 }
+body main .loadingPopup-failed {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  max-height: 18vh;
+  overflow-y: auto;
+  align-items: flex-start;
+  margin-top: 50px;
+  flex-wrap: wrap;
+}
+body main .loadingPopup-failed span {
+  font-size: 0.9rem;
+  color: var(--blackColor);
+}

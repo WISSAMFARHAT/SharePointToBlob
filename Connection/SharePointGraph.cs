@@ -65,7 +65,7 @@ namespace Connection
             _FileShare = fileShare;
         }
 
-        public async Task<List<ItemModel>> Fetch(string ID=null) 
+        public async Task<List<ItemModel>> Fetch(string ID = null)
         {
             try
             {
@@ -84,15 +84,15 @@ namespace Connection
                 else
                 {
                     ListCollectionResponse? lists = await _microsoft.Sites[ID].Lists.GetAsync();
-                     response = lists.Value.Where(x => !x.WebUrl.Contains("/Lists/")).Select(x => new ItemModel
-                     {
-                         ID = x.Id,
-                         Name = x.Name,
-                         WebUrl = x.WebUrl
-                     }).ToList(); ;
+                    response = lists.Value.Where(x => !x.WebUrl.Contains("/Lists/")).Select(x => new ItemModel
+                    {
+                        ID = x.Id,
+                        Name = x.Name,
+                        WebUrl = x.WebUrl
+                    }).ToList(); ;
                 }
 
-               // List<ItemModel> sitesModel = new();
+                // List<ItemModel> sitesModel = new();
 
                 //foreach (var site in response)
                 //{
@@ -113,84 +113,88 @@ namespace Connection
             }
         }
 
-        public async Task<List<ItemModel>> GetAllFolderList(string siteId, string listId)
+        public async Task<List<ItemModel>> GetAllFolder(string siteId, string listId, string folderID = null)
         {
             try
             {
                 bool empty = true;
                 List<ItemModel> itemsModel = new();
 
-                do
+                if (string.IsNullOrEmpty(folderID))
                 {
-                    HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/root/children");
-                    string responseContent = await responseMessage.Content.ReadAsStringAsync();
-                    DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
-
-                    if (root.Value != null)
+                    do
                     {
-                        empty = false;
+                        HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/root/children");
+                        string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                        DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
-                        foreach (DriveModel.Values item in root.Value)
+                        if (root.Value != null)
                         {
-                            int count = 0;
-                            if (item.Folder != null)
-                                count = item.Folder.ChildCount;
+                            empty = false;
 
-                            itemsModel.Add(new()
+                            foreach (DriveModel.Values item in root.Value)
                             {
-                                ID = item.Id,
-                                Name = item.Name,
-                                WebUrl = item.WebUrl,
-                                Size = item.Size,
-                                Count = count,
-                                ShowDiv = true,
-                            });
+                                int count = 0;
+                                if (item.Folder != null)
+                                    count = item.Folder.ChildCount;
+
+                                itemsModel.Add(new()
+                                {
+                                    ID = item.Id,
+                                    Name = item.Name,
+                                    WebUrl = item.WebUrl,
+                                    Size = item.Size,
+                                    Count = count,
+                                    ShowDiv = true,
+                                });
+                            }
+
+                            await Task.Delay(1000);
                         }
 
-                        await Task.Delay(1000);
-                    }
+                    } while (empty);
 
-                } while (empty);
-
-                return itemsModel.OrderBy(key => key.Name).ToList();
-            }
-            catch
-            {
-                return new();
-            }
-        }
-
-        public async Task<List<ItemModel>> GetAllItemsFolder(string siteId, string listId, string folderID)
-        {
-            try
-            {
-                HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderID}')/children");
-                string responseContent = await responseMessage.Content.ReadAsStringAsync();
-                DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
-
-                List<ItemModel> itemsModel = new();
-
-                foreach (DriveModel.Values item in root.Value)
+                }
+                else
                 {
-                    int count = 0;
-
-                    if (item.Folder != null)
-                        count = item.Folder.ChildCount;
-
-                    itemsModel.Add(new()
+                    do
                     {
-                        ID = item.Id,
-                        Name = item.Name,
-                        WebUrl = item.WebUrl,
-                        Size = item.Size,
-                        Count = count,
-                        ShowDiv = true,
-                    });
+                        HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderID}')/children");
+                        string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                        DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
+
+                        if (root.Value != null)
+                        {
+                            empty = false;
+
+                            foreach (DriveModel.Values item in root.Value)
+                            {
+                                int count = 0;
+
+                                if (item.Folder != null)
+                                    count = item.Folder.ChildCount;
+
+                                itemsModel.Add(new()
+                                {
+                                    ID = item.Id,
+                                    Name = item.Name,
+                                    WebUrl = item.WebUrl,
+                                    Size = item.Size,
+                                    Count = count,
+                                    ShowDiv = true,
+                                });
+                            }
+
+                            await Task.Delay(1000);
+                        }
+
+                    } while (empty);
                 }
 
                 return itemsModel.OrderBy(key => key.Name).ToList();
+
             }
-            catch
+            catch (Exception ex)
             {
                 return new();
             }
@@ -202,34 +206,42 @@ namespace Connection
             HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{fileId}')/children");
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
             DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
-
+            bool empty = true;
             List<ItemModel> items = new();
 
-            foreach (DriveModel.Values item in root.Value)
+            do
             {
-                string folderName = $"{name}/";
-
-                if (item.Folder != null)
+                if (root.Value != null)
                 {
-                    folderName += $"{item.Name}";
-
-                    items.Add(new()
+                    empty = false;
+                    foreach (DriveModel.Values item in root.Value)
                     {
-                        FolderID = item.Id,
-                        Name = folderName,
-                        WebUrl = item.WebUrl,
-                    });
+                        string folderName = $"{name}/";
 
-                    items.AddRange(await GetAll(folderName, siteId, listId, item.Id));
+                        if (item.Folder != null)
+                        {
+                            folderName += $"{item.Name}";
+
+                            items.Add(new()
+                            {
+                                FolderID = item.Id,
+                                Name = folderName,
+                                WebUrl = item.WebUrl,
+                            });
+
+                            items.AddRange(await GetAll(folderName, siteId, listId, item.Id));
+                        }
+                        else
+                            items.Add(new()
+                            {
+                                ID = item.Id,
+                                Name = $"{folderName}{item.Name}",
+                                WebUrl = item.WebUrl,
+                            });
+                    }
                 }
-                else
-                    items.Add(new()
-                    {
-                        ID = item.Id,
-                        Name = $"{folderName}{item.Name}",
-                        WebUrl = item.WebUrl,
-                    });
-            }
+
+            } while (empty);
 
             return items.OrderBy(key => key.Name).ToList();
         }
