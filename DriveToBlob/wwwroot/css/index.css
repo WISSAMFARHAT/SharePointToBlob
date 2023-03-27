@@ -44,6 +44,24 @@ body main .sites-info-description {
   justify-content: center;
   gap: 20px;
 }
+body main .sites-info-message {
+  width: 100%;
+  margin-block: 30px;
+  display: none;
+}
+body main .sites-info-message > p {
+  margin-inline: auto;
+  width: 100%;
+  text-align: center;
+  grid-column-end: 5;
+  grid-column-start: 1;
+  font-size: 2rem;
+  position: relative;
+  color: var(--blackColor);
+}
+body main .sites-info-message._block {
+  display: block!important;
+}
 body main .sites-button {
   width: 100%;
   display: flex;

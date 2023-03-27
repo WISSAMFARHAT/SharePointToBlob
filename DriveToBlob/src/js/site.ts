@@ -1,4 +1,5 @@
 ﻿
+
 window.onscroll = function (event) {
     var doc = document.documentElement;
     var scrollTop = doc.scrollTop;
@@ -24,12 +25,12 @@ export function scrollToSection(id) {
 
 
 export function Return() {
-    //const path = window.location.pathname;
-    //let parts = path.split("/");
-    //let newpath = parts.slice(0, -1).join("/") + "/";
-
-    //window.location.href = newpath;
-    window.history.back();
+    const information = document.getElementById("message");
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        information.classList.add("_block");
+    }
 }
 
 export function Refresh() {

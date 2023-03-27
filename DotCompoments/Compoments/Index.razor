@@ -22,6 +22,11 @@
                 <div class="sites-info-search">
                     <input type="text" placeholder="Search by Name..." @oninput="Search" />
                 </div>
+
+                <div class="sites-info-message" id="message">
+                    <p>Task completed</p>
+                </div>
+
                 <div class="sites-info-description">
                     @foreach (ItemModel item in TempItems)
                     {
@@ -82,7 +87,7 @@ else
             </div>
             <div class="loadingPopup-details">
                 <div>
-                    <p>@ProgressTitle</p>
+                    <p class="progressTitle">@ProgressTitle</p>
                 </div>
                 <div>
                     <span style="--percentage:@Percentage%;"></span>
