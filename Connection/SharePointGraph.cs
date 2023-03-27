@@ -4,6 +4,8 @@ using Azure.Identity;
 using Connection.Model;
 using Microsoft.Graph;
 using Microsoft.Graph.Models;
+using Microsoft.Graph.Models.CallRecords;
+using Microsoft.Graph.Models.TermStore;
 using Microsoft.Identity.Client;
 using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Authentication;
@@ -208,12 +210,12 @@ namespace Connection
             DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
             bool empty = true;
             List<ItemModel> items = new();
-
             do
             {
                 if (root.Value != null)
                 {
                     empty = false;
+
                     foreach (DriveModel.Values item in root.Value)
                     {
                         string folderName = $"{name}/";
@@ -237,6 +239,7 @@ namespace Connection
                                 ID = item.Id,
                                 Name = $"{folderName}{item.Name}",
                                 WebUrl = item.WebUrl,
+                                Size=item.Size
                             });
                     }
                 }

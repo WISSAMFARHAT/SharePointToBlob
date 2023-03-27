@@ -82,11 +82,11 @@ public partial class Index
         {
             List<ItemModel> allfiles = new()
                 {
-                    new ItemModel
-                    {
-                        FolderID = Site.FolderID,
-                        Name = Site.Name,
-                    }
+                    //new ItemModel
+                    //{
+                    //    FolderID = Site.FolderID,
+                    //    Name = Site.Name,
+                    //}
                 };
 
             Loading = true;

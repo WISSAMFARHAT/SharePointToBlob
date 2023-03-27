@@ -61,8 +61,6 @@ body {
                 }
             }
 
-
-
             &-button {
                 width: 100%;
                 display: flex;
@@ -206,11 +204,20 @@ body {
                 overflow-y: auto;
                 align-items: flex-start;
                 margin-top: 50px;
-                flex-wrap: wrap;
 
                 span {
                     font-size: .9rem;
                     color: var(--blackColor);
+                    position:relative;
+                    user-select:all;
+                    &:before{
+                        display:inline-block;
+                        width:10px;
+                        height:10px;
+                        border-radius:50%;
+                        background-color:var(--primaryColor);
+                        border:none;
+                    }
                 }
             }
         }

@@ -187,9 +187,18 @@ body main .loadingPopup-failed {
   overflow-y: auto;
   align-items: flex-start;
   margin-top: 50px;
-  flex-wrap: wrap;
 }
 body main .loadingPopup-failed span {
   font-size: 0.9rem;
   color: var(--blackColor);
+  position: relative;
+  user-select: all;
+}
+body main .loadingPopup-failed span:before {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--primaryColor);
+  border: none;
 }
