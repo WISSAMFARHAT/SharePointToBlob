@@ -159,38 +159,33 @@ namespace Connection
                 }
                 else
                 {
-                    do
+                    HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderID}')/children");
+                    string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                    DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
+
+                    if (root.Value != null)
                     {
-                        HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderID}')/children");
-                        string responseContent = await responseMessage.Content.ReadAsStringAsync();
-                        DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
-                        if (root.Value != null)
+                        foreach (DriveModel.Values item in root.Value)
                         {
-                            empty = false;
+                            int count = 0;
 
-                            foreach (DriveModel.Values item in root.Value)
+                            if (item.Folder != null)
+                                count = item.Folder.ChildCount;
+
+                            itemsModel.Add(new()
                             {
-                                int count = 0;
-
-                                if (item.Folder != null)
-                                    count = item.Folder.ChildCount;
-
-                                itemsModel.Add(new()
-                                {
-                                    ID = item.Id,
-                                    Name = item.Name,
-                                    WebUrl = item.WebUrl,
-                                    Size = item.Size,
-                                    Count = count,
-                                    ShowDiv = true,
-                                });
-                            }
-
-                            await Task.Delay(1000);
+                                ID = item.Id,
+                                Name = item.Name,
+                                WebUrl = item.WebUrl,
+                                Size = item.Size,
+                                Count = count,
+                                ShowDiv = true,
+                            });
                         }
 
-                    } while (empty);
+                        await Task.Delay(1000);
+                    }
                 }
 
                 return itemsModel.OrderBy(key => key.Name).ToList();
@@ -210,41 +205,37 @@ namespace Connection
             DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
             bool empty = true;
             List<ItemModel> items = new();
-            do
+
+            if (root.Value != null)
             {
-                if (root.Value != null)
+                foreach (DriveModel.Values item in root.Value)
                 {
-                    empty = false;
+                    string folderName = $"{name}/";
 
-                    foreach (DriveModel.Values item in root.Value)
+                    if (item.Folder != null)
                     {
-                        string folderName = $"{name}/";
+                        folderName += $"{item.Name}";
 
-                        if (item.Folder != null)
+                        items.Add(new()
                         {
-                            folderName += $"{item.Name}";
+                            FolderID = item.Id,
+                            Name = folderName,
+                            WebUrl = item.WebUrl,
+                        });
 
-                            items.Add(new()
-                            {
-                                FolderID = item.Id,
-                                Name = folderName,
-                                WebUrl = item.WebUrl,
-                            });
-
-                            items.AddRange(await GetAll(folderName, siteId, listId, item.Id));
-                        }
-                        else
-                            items.Add(new()
-                            {
-                                ID = item.Id,
-                                Name = $"{folderName}{item.Name}",
-                                WebUrl = item.WebUrl,
-                                Size=item.Size
-                            });
+                        items.AddRange(await GetAll(folderName, siteId, listId, item.Id));
                     }
+                    else
+                        items.Add(new()
+                        {
+                            ID = item.Id,
+                            Name = $"{folderName}{item.Name}",
+                            WebUrl = item.WebUrl,
+                            Size = item.Size
+                        });
                 }
+            }
 
-            } while (empty);
 
             return items.OrderBy(key => key.Name).ToList();
         }
