@@ -33,21 +33,21 @@ public partial class Index
             Url = $"/{Site.Name}";
 
         if (string.IsNullOrEmpty(Site.ID) && string.IsNullOrEmpty(Site.ListID) && string.IsNullOrEmpty(Site.FolderID))
-            Items = await _sharePointGraph.GetAllSides();
+            Items = await _sharePointGraph.Fetch();
 
         else if (string.IsNullOrEmpty(Site.ListID) && string.IsNullOrEmpty(Site.FolderID))
         {
-            Items = await _sharePointGraph.GetAllListSide(Site.ID);
+            Items = await _sharePointGraph.Fetch(Site.ID);
             Url += $"/{Site.ID}";
         }
         else if (string.IsNullOrEmpty(Site.FolderID))
         {
-            Items = await _sharePointGraph.GetAllFolderList(Site.ID, Site.ListID);
+            Items = await _sharePointGraph.GetAllFolder(Site.ID, Site.ListID);
             Url += $"/{Site.ID}/{Site.ListID}";
         }
         else
         {
-            Items = await _sharePointGraph.GetAllItemsFolder(Site.ID, Site.ListID, Site.FolderID);
+            Items = await _sharePointGraph.GetAllFolder(Site.ID, Site.ListID, Site.FolderID);
             Url += $"/{Site.ID}/{Site.ListID}";
         }
 

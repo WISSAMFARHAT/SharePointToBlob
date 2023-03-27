@@ -9,6 +9,7 @@ using Microsoft.Kiota.Abstractions;
 using Microsoft.Kiota.Abstractions.Authentication;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -64,88 +65,92 @@ namespace Connection
             _FileShare = fileShare;
         }
 
-        public async Task<List<ItemModel>> GetAllSides()
+        public async Task<List<ItemModel>> Fetch(string ID=null) 
         {
             try
             {
-                Microsoft.Graph.Models.SiteCollectionResponse sites = await _microsoft.Sites.GetAsync();
-                List<Microsoft.Graph.Models.Site> response = sites.Value.Where(x => x.WebUrl.Contains("/sites/")).ToList();
+                List<ItemModel> response = new();
 
-                List<ItemModel> sitesModel = new();
-
-                foreach (var site in response)
+                if (string.IsNullOrEmpty(ID))
                 {
-                    sitesModel.Add(new()
+                    SiteCollectionResponse sites = await _microsoft.Sites.GetAsync();
+                    response = sites.Value.Where(x => x.WebUrl.Contains("/sites/")).Select(x => new ItemModel
                     {
-                        ID = site.Id,
-                        Name = site.Name,
-                        WebUrl = site.WebUrl,
-                    });
+                        ID = x.Id,
+                        Name = x.Name,
+                        WebUrl = x.WebUrl
+                    }).ToList(); ;
+                }
+                else
+                {
+                    ListCollectionResponse? lists = await _microsoft.Sites[ID].Lists.GetAsync();
+                     response = lists.Value.Where(x => !x.WebUrl.Contains("/Lists/")).Select(x => new ItemModel
+                     {
+                         ID = x.Id,
+                         Name = x.Name,
+                         WebUrl = x.WebUrl
+                     }).ToList(); ;
                 }
 
-                return sitesModel.OrderBy(key => key.Name).ToList();
+               // List<ItemModel> sitesModel = new();
+
+                //foreach (var site in response)
+                //{
+                //    sitesModel.Add(new()
+                //    {
+                //        ID = site.Id,
+                //        Name = site.Name,
+                //        WebUrl = site.WebUrl,
+                //    });
+                //}
+
+                return response.OrderBy(key => key.Name).ToList();
+
             }
-            catch
+            catch (Exception ex)
             {
                 return new();
             }
         }
 
-
-        public async Task<List<ItemModel>> GetAllListSide(string ID)
-        {
-            try
-            {
-                ListCollectionResponse? lists = await _microsoft.Sites[ID].Lists.GetAsync();
-                List<List> response = lists.Value.Where(x => !x.WebUrl.Contains("/Lists/")).ToList();
-
-                List<ItemModel> listModel = new();
-
-                foreach (List list in response)
-                {
-
-                    listModel.Add(new()
-                    {
-                        ID = list.Id,
-                        Name = list.Name,
-                        WebUrl = list.WebUrl,
-                    });
-                }
-
-                return listModel.OrderBy(key => key.Name).ToList();
-            }
-            catch
-            {
-                return new();
-            }
-        }
         public async Task<List<ItemModel>> GetAllFolderList(string siteId, string listId)
         {
             try
             {
-
-                HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/root/children");
-                string responseContent = await responseMessage.Content.ReadAsStringAsync();
-                DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
-
+                bool empty = true;
                 List<ItemModel> itemsModel = new();
 
-                foreach (DriveModel.Values item in root.Value)
+                do
                 {
-                    int count = 0;
-                    if (item.Folder != null)
-                        count = item.Folder.ChildCount;
+                    HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/root/children");
+                    string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                    DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
-                    itemsModel.Add(new()
+                    if (root.Value != null)
                     {
-                        ID = item.Id,
-                        Name = item.Name,
-                        WebUrl = item.WebUrl,
-                        Size = item.Size,
-                        Count = count,
-                        ShowDiv = true,
-                    });
-                }
+                        empty = false;
+
+                        foreach (DriveModel.Values item in root.Value)
+                        {
+                            int count = 0;
+                            if (item.Folder != null)
+                                count = item.Folder.ChildCount;
+
+                            itemsModel.Add(new()
+                            {
+                                ID = item.Id,
+                                Name = item.Name,
+                                WebUrl = item.WebUrl,
+                                Size = item.Size,
+                                Count = count,
+                                ShowDiv = true,
+                            });
+                        }
+
+                        await Task.Delay(1000);
+                    }
+
+                } while (empty);
 
                 return itemsModel.OrderBy(key => key.Name).ToList();
             }
@@ -270,6 +275,9 @@ namespace Connection
         }
 
         public async Task Delete(string siteId, string listId, string itemId)
-            => await DeleteData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{itemId}')");
+        {
+            HttpResponseMessage request = await DeleteData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{itemId}')");
+            string responseContent = await request.Content.ReadAsStringAsync();
+        }
     }
 }
