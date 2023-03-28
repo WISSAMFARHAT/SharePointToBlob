@@ -136,19 +136,22 @@ namespace Connection
 
                             foreach (DriveModel.Values item in root.Value)
                             {
-                                int count = 0;
-                                if (item.Folder != null)
-                                    count = item.Folder.ChildCount;
-
-                                itemsModel.Add(new()
+                                if (item.Size != 0)
                                 {
-                                    ID = item.Id,
-                                    Name = item.Name,
-                                    WebUrl = item.WebUrl,
-                                    Size = item.Size,
-                                    Count = count,
-                                    ShowDiv = true,
-                                });
+                                    int count = 0;
+                                    if (item.Folder != null)
+                                        count = item.Folder.ChildCount;
+
+                                    itemsModel.Add(new()
+                                    {
+                                        ID = item.Id,
+                                        Name = item.Name,
+                                        WebUrl = item.WebUrl,
+                                        Size = item.Size,
+                                        Count = count,
+                                        ShowDiv = true,
+                                    });
+                                }
                             }
 
                             await Task.Delay(1000);
@@ -168,20 +171,24 @@ namespace Connection
 
                         foreach (DriveModel.Values item in root.Value)
                         {
-                            int count = 0;
-
-                            if (item.Folder != null)
-                                count = item.Folder.ChildCount;
-
-                            itemsModel.Add(new()
+                            if (item.Size != 0)
                             {
-                                ID = item.Id,
-                                Name = item.Name,
-                                WebUrl = item.WebUrl,
-                                Size = item.Size,
-                                Count = count,
-                                ShowDiv = true,
-                            });
+
+                                int count = 0;
+
+                                if (item.Folder != null)
+                                    count = item.Folder.ChildCount;
+
+                                itemsModel.Add(new()
+                                {
+                                    ID = item.Id,
+                                    Name = item.Name,
+                                    WebUrl = item.WebUrl,
+                                    Size = item.Size,
+                                    Count = count,
+                                    ShowDiv = true,
+                                });
+                            }
                         }
 
                         await Task.Delay(1000);
@@ -263,7 +270,9 @@ namespace Connection
                     Name = item.Name
                 };
 
-                if (await _FileShare.AddFile(fileModel, overwrite))
+                ResultModel result = await _FileShare.AddFile(fileModel, overwrite);
+
+                if (result.Success)
                 {
                     await Delete(siteId, listId, item.ID);
                     return new()
@@ -273,20 +282,16 @@ namespace Connection
                     };
                 }
 
-                return new()
-                {
-                    Success = false,
-                    Status = StatusModel.Failed,
-                };
+                return result;
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return new()
                 {
                     Success = false,
                     Status = StatusModel.Failed,
-                    Error= ex.ToString()    
+                    Error = ex.ToString()
                 };
             }
         }

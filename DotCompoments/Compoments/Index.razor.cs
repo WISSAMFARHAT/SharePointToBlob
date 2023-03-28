@@ -18,6 +18,7 @@ public partial class Index
     public string? DisplayTotalSize { get; set; }
     public string ProgressTitle => Finalizing ? "Finalizing" : (TotalFile == 0 ? "Gathering files" : $"{FileCount}/{TotalFile} ({TransferTasks.Count} running tasks)");
     public bool Finalizing { get; set; } = false;
+    public bool ShowError { get; set; } = false;
     public long? TotalSize { get; set; } = 0;
     public int FileCount { get; set; } = 0;
     public int Percentage { get; set; } = 0;
@@ -133,6 +134,7 @@ public partial class Index
 
             await Task.WhenAll(TransferTasks);
 
+            ShowError = TransferFailedFiles.Any();
             Finalizing = true;
 
             StateHasChanged();

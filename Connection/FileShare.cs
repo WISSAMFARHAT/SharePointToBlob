@@ -21,7 +21,7 @@ namespace Connection
             ShareContainerClient.CreateIfNotExists();
         }
 
-        public async Task<bool> AddFile(FileModel file, bool overrideCheck)
+        public async Task<ResultModel> AddFile(FileModel file, bool overrideCheck)
         {
             try
             {
@@ -53,7 +53,12 @@ namespace Connection
                 if (await fileClient.ExistsAsync())
                 {
                     if (!overrideCheck)
-                        return false;
+                        return new()
+                        {
+                            Success = false,
+                            Status=StatusModel.Skip,
+                            Error= "override"
+                        };
 
                     await fileClient.DeleteAsync();
                 }
@@ -73,14 +78,28 @@ namespace Connection
 
                 // Check if the copy operation succeeded or failed
                 if (destinationProperties.CopyStatus != CopyStatus.Success)
-                    return false;
+                    return new()
+                    {
+                        Success=false,
+                        Status=StatusModel.Failed,
+                        Error = "Failed Task"
+                    };
 
-                return true;
+                return new()
+                {
+                    Success=true,
+                    Status=StatusModel.Succeed,
+                };
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return false;
+                return new()
+                {
+                    Success = false,
+                    Status = StatusModel.Failed,
+                    Error = ex.Message
+                };
             }
         }
     }

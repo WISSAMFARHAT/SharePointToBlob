@@ -60,7 +60,7 @@ body main .sites-info-message > p {
   color: var(--blackColor);
 }
 body main .sites-info-message._block {
-  display: block!important;
+  display: block !important;
 }
 body main .sites-button {
   width: 100%;
@@ -193,6 +193,7 @@ body main .loadingPopup-failed span {
   color: var(--blackColor);
   position: relative;
   user-select: all;
+  overflow-wrap: anywhere;
 }
 body main .loadingPopup-failed span:before {
   display: inline-block;

@@ -55,8 +55,8 @@ body {
                         color: var(--blackColor);
                     }
 
-                    &._block{
-                        display:block!important;
+                    &._block {
+                        display: block !important;
                     }
                 }
             }
@@ -208,15 +208,17 @@ body {
                 span {
                     font-size: .9rem;
                     color: var(--blackColor);
-                    position:relative;
-                    user-select:all;
-                    &:before{
-                        display:inline-block;
-                        width:10px;
-                        height:10px;
-                        border-radius:50%;
-                        background-color:var(--primaryColor);
-                        border:none;
+                    position: relative;
+                    user-select: all;
+                    overflow-wrap: anywhere;
+
+                    &:before {
+                        display: inline-block;
+                        width: 10px;
+                        height: 10px;
+                        border-radius: 50%;
+                        background-color: var(--primaryColor);
+                        border: none;
                     }
                 }
             }
