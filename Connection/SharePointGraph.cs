@@ -203,7 +203,6 @@ namespace Connection
             HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{fileId}')/children");
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
             DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
-            bool empty = true;
             List<ItemModel> items = new();
 
             if (root.Value != null)
@@ -240,50 +239,85 @@ namespace Connection
             return items.OrderBy(key => key.Name).ToList();
         }
 
-        public async Task<bool> SaveDelete(string siteId, string listId, ItemModel item, bool overwrite)
+        public async Task<ResultModel> SaveDelete(string siteId, string listId, ItemModel item, bool overwrite)
         {
-            // If Folder
-            if (string.IsNullOrEmpty(item.ID))
-                return true;
-
-            HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{item.ID}')");
-            string responseContent = await responseMessage.Content.ReadAsStringAsync();
-            ItemShareModel file = JsonConvert.DeserializeObject<ItemShareModel>(responseContent)!;
-
-            FileModel fileModel = new()
+            try
             {
-                FileUrl = file.microsoftgraphdownloadUrl,
-                FileLength = file.size,
-                Name = item.Name
-            };
 
-            if (await _FileShare.AddFile(fileModel, overwrite))
-            {
-                await Delete(siteId, listId, item.ID);
-                return true;
+                // If Folder
+                if (string.IsNullOrEmpty(item.ID))
+                    return new()
+                    {
+                        Success = true,
+                        Status = StatusModel.Skip
+                    };
+
+                HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{item.ID}')");
+                string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                ItemShareModel file = JsonConvert.DeserializeObject<ItemShareModel>(responseContent)!;
+
+                FileModel fileModel = new()
+                {
+                    FileUrl = file.microsoftgraphdownloadUrl,
+                    FileLength = file.size,
+                    Name = item.Name
+                };
+
+                if (await _FileShare.AddFile(fileModel, overwrite))
+                {
+                    await Delete(siteId, listId, item.ID);
+                    return new()
+                    {
+                        Success = true,
+                        Status = StatusModel.Succeed
+                    };
+                }
+
+                return new()
+                {
+                    Success = false,
+                    Status = StatusModel.Failed,
+                };
+
             }
-
-            return false;
+            catch(Exception ex)
+            {
+                return new()
+                {
+                    Success = false,
+                    Status = StatusModel.Failed,
+                    Error= ex.ToString()    
+                };
+            }
         }
 
         public async Task<bool> DeleteSubFolderEmpty(string siteId, string listId, string folderId)
         {
-            HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderId}')");
-            string responseContent = await responseMessage.Content.ReadAsStringAsync();
-            ItemShareModel root = JsonConvert.DeserializeObject<ItemShareModel>(responseContent)!;
+            try
+            {
+                HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderId}')");
+                string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                ItemShareModel root = JsonConvert.DeserializeObject<ItemShareModel>(responseContent)!;
 
-            if (root.folder == null || root.folder.childCount > 0)
-                return false;
+                if (root.folder == null || root.folder.childCount > 0)
+                    return false;
 
-            await Delete(siteId, listId, folderId);
+                await Delete(siteId, listId, folderId);
 
-            return true;
+                return true;
+
+            }
+            catch (Exception)
+            {
+                return true;
+            }
+
         }
 
         public async Task Delete(string siteId, string listId, string itemId)
         {
             HttpResponseMessage request = await DeleteData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{itemId}')");
-            string responseContent = await request.Content.ReadAsStringAsync();
+            request.EnsureSuccessStatusCode();
         }
     }
 }

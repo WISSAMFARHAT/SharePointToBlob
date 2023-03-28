@@ -82,11 +82,11 @@ public partial class Index
         {
             List<ItemModel> allfiles = new()
                 {
-                    //new ItemModel
-                    //{
-                    //    FolderID = Site.FolderID,
-                    //    Name = Site.Name,
-                    //}
+                    new ItemModel
+                    {
+                        FolderID = Site.FolderID,
+                        Name = Site.Name,
+                    }
                 };
 
             Loading = true;
@@ -115,10 +115,10 @@ public partial class Index
 
                 TransferTasks.Add(Task.Factory.StartNew(async () =>
                 {
-                    bool transfered = await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, Overwrite);
+                    ResultModel transfered = await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, Overwrite);
 
-                    if (!transfered)
-                        TransferFailedFiles.Add($"{file.Name} [{file.DisplaySize}]");
+                    if (!transfered.Success)
+                        TransferFailedFiles.Add($"{file.Name} [{file.DisplaySize}] | {transfered.Error} [{transfered.Status}]");
 
                     Percentage = 100 * FileCount++ / TotalFile;
 
