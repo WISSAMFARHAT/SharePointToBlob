@@ -8,7 +8,6 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 
-
 builder.Services.AddSingleton<Connection.FileShare>(provider =>
 {
     string connection = builder.Configuration["blob:ConnectionString"];

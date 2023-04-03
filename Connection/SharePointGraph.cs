@@ -21,9 +21,9 @@ namespace Connection
 {
     public class SharePointGraph
     {
-        private string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
+        private readonly string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
 
-        private GraphServiceClient _microsoft;
+        private readonly GraphServiceClient _microsoft;
 
         private string _token { get; set; }
 
@@ -94,18 +94,6 @@ namespace Connection
                     }).ToList(); ;
                 }
 
-                // List<ItemModel> sitesModel = new();
-
-                //foreach (var site in response)
-                //{
-                //    sitesModel.Add(new()
-                //    {
-                //        ID = site.Id,
-                //        Name = site.Name,
-                //        WebUrl = site.WebUrl,
-                //    });
-                //}
-
                 return response.OrderBy(key => key.Name).ToList();
 
             }
@@ -130,35 +118,26 @@ namespace Connection
                         string responseContent = await responseMessage.Content.ReadAsStringAsync();
                         DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
+
                         if (root.Value != null)
                         {
                             empty = false;
 
-                            foreach (DriveModel.Values item in root.Value)
-                            {
-                                if (item.Size != 0)
+                            foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
+                                itemsModel.Add(new()
                                 {
-                                    int count = 0;
-                                    if (item.Folder != null)
-                                        count = item.Folder.ChildCount;
-
-                                    itemsModel.Add(new()
-                                    {
-                                        ID = item.Id,
-                                        Name = item.Name,
-                                        WebUrl = item.WebUrl,
-                                        Size = item.Size,
-                                        Count = count,
-                                        ShowDiv = true,
-                                    });
-                                }
-                            }
+                                    ID = item.Id,
+                                    Name = item.Name,
+                                    WebUrl = item.WebUrl,
+                                    Size = item.Size,
+                                    Count = item.Folder?.ChildCount ?? 0,
+                                    ShowDiv = true,
+                                });
 
                             await Task.Delay(1000);
                         }
 
                     } while (empty);
-
                 }
                 else
                 {
@@ -168,28 +147,16 @@ namespace Connection
 
                     if (root.Value != null)
                     {
-
-                        foreach (DriveModel.Values item in root.Value)
-                        {
-                            if (item.Size != 0)
+                        foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
+                            itemsModel.Add(new()
                             {
-
-                                int count = 0;
-
-                                if (item.Folder != null)
-                                    count = item.Folder.ChildCount;
-
-                                itemsModel.Add(new()
-                                {
-                                    ID = item.Id,
-                                    Name = item.Name,
-                                    WebUrl = item.WebUrl,
-                                    Size = item.Size,
-                                    Count = count,
-                                    ShowDiv = true,
-                                });
-                            }
-                        }
+                                ID = item.Id,
+                                Name = item.Name,
+                                WebUrl = item.WebUrl,
+                                Size = item.Size,
+                                Count = item.Folder?.ChildCount ?? 0,
+                                ShowDiv = true,
+                            });
 
                         await Task.Delay(1000);
                     }
@@ -206,7 +173,6 @@ namespace Connection
 
         public async Task<List<ItemModel>> GetAll(string name, string siteId, string listId, string fileId)
         {
-
             HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{fileId}')/children");
             string responseContent = await responseMessage.Content.ReadAsStringAsync();
             DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
@@ -274,7 +240,20 @@ namespace Connection
 
                 if (result.Success)
                 {
-                    await Delete(siteId, listId, item.ID);
+                    int deleteTryCount = 3;
+
+                    while (deleteTryCount >= 0)
+                    {
+                        deleteTryCount--;
+
+                        bool isDeleted = await Delete(siteId, listId, item.ID);
+
+                        if (isDeleted)
+                            break;
+
+                        await Task.Delay(TimeSpan.FromSeconds(1));
+                    }
+
                     return new()
                     {
                         Success = true,
@@ -307,10 +286,7 @@ namespace Connection
                 if (root.folder == null || root.folder.childCount > 0)
                     return false;
 
-                await Delete(siteId, listId, folderId);
-
-                return true;
-
+                return await Delete(siteId, listId, folderId);
             }
             catch (Exception)
             {
@@ -319,10 +295,11 @@ namespace Connection
 
         }
 
-        public async Task Delete(string siteId, string listId, string itemId)
+        public async Task<bool> Delete(string siteId, string listId, string itemId)
         {
             HttpResponseMessage request = await DeleteData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{itemId}')");
-            request.EnsureSuccessStatusCode();
+
+            return request.IsSuccessStatusCode;
         }
     }
 }

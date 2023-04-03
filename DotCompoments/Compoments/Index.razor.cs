@@ -1,12 +1,9 @@
-using Connection;
 using Connection.Model;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using System;
-using System.Drawing;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DotCompoments.Compoments;
+
 public partial class Index
 {
     [Parameter] public SiteModel? Site { get; set; }
@@ -16,7 +13,7 @@ public partial class Index
     public bool Overwrite { get; set; } = false;
     public int TotalFile { get; set; } = 0;
     public string? DisplayTotalSize { get; set; }
-    public string ProgressTitle => Finalizing ? "Finalizing" : (TotalFile == 0 ? "Gathering files" : $"{FileCount}/{TotalFile} ({TransferTasks.Count} running tasks)");
+    public string ProgressTitle => Finalizing ? "Finalizing" : (TotalFile == 0 ? "Gathering files" : $"{FileCount}/{TotalFile} ({TransferTasks.Count(key => !key.IsCompleted)} running tasks)");
     public bool Finalizing { get; set; } = false;
     public bool ShowError { get; set; } = false;
     public long? TotalSize { get; set; } = 0;
@@ -24,7 +21,7 @@ public partial class Index
     public int Percentage { get; set; } = 0;
     public List<string> TransferFailedFiles { get; set; } = new();
     public string Url { get; set; } = $"";
-    public string ErrorDescription { get; set; }
+    public string? ErrorDescription { get; set; }
     private List<Task> TransferTasks { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
@@ -67,16 +64,19 @@ public partial class Index
 
         this.StateHasChanged();
     }
+
     public async Task Search(ChangeEventArgs e)
     {
         TempItems = Items.Where(x => x.Name.ToLower().StartsWith(e.Value.ToString().ToLower())).ToList();
         this.StateHasChanged();
     }
+
     public void Close()
     {
         Loading = false;
         this.StateHasChanged();
     }
+
     public async Task Archive()
     {
         try
@@ -91,7 +91,7 @@ public partial class Index
                 };
 
             Loading = true;
-            this.StateHasChanged();
+            StateHasChanged();
 
             allfiles.AddRange(await _sharePointGraph.GetAll(Site.Name.Replace("|", "/"), Site.ID, Site.ListID, Site.FolderID));
             allfiles.Reverse();
@@ -101,20 +101,14 @@ public partial class Index
             Finalizing = false;
             FileCount = 0;
             Percentage = 0;
-            int maxParallelTasks = 6;
+            int maxParallelTasks = 5;
 
             TotalFile = allfiles.Count;
             StateHasChanged();
 
             foreach (ItemModel file in allfiles)
             {
-                while (TransferTasks.Count >= maxParallelTasks)
-                {
-                    await Task.WhenAny(TransferTasks);
-                    TransferTasks.RemoveAll(task => task.IsCompleted);
-                }
-
-                TransferTasks.Add(Task.Factory.StartNew(async () =>
+                TransferTasks.Add(Task.Run(async () =>
                 {
                     ResultModel transfered = await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, Overwrite);
 
@@ -125,6 +119,14 @@ public partial class Index
 
                     await InvokeAsync(() => StateHasChanged());
                 }));
+
+                if (TransferTasks.Count > maxParallelTasks)
+                {
+                    TransferTasks.Remove(await Task.WhenAny(TransferTasks));
+
+                    if (TransferTasks.Any(key => key.IsCompleted))
+                        TransferTasks.RemoveAll(key => key.IsCompleted);
+                }
 
                 StateHasChanged();
             }
@@ -143,19 +145,18 @@ public partial class Index
 
             while (folders.Any(key => !key.IsDeleted))
                 foreach (ItemModel file in folders.Where(key => !key.IsDeleted))
-                    file.IsDeleted = await _sharePointGraph.DeleteSubFolderEmpty(Site.ID, Site.ListID, file.FolderID);
+                    try { file.IsDeleted = await _sharePointGraph.DeleteSubFolderEmpty(Site.ID, Site.ListID, file.FolderID); }
+                    catch { }
 
             Loading = false;
-            this.StateHasChanged();
+            StateHasChanged();
 
             await JS.InvokeVoidAsync("Return");
-
         }
         catch (Exception ex)
         {
             ErrorDescription = ex.Message;
             //await JS.InvokeAsync<object>("Refresh");
         }
-
     }
 }

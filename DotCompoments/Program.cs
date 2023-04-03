@@ -15,7 +15,6 @@ builder.Services.AddSingleton<Connection.FileShare>(provider =>
 
 });
 
-
 builder.Services.AddSingleton<SharePointGraph>(provider =>
 {
 
