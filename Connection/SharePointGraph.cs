@@ -80,6 +80,8 @@ namespace Connection
             AuthProvider = new(tenantId, appID, appSecret, options);
 
             _microsoft = new GraphServiceClient(AuthProvider, scopes);
+
+            RefreshToken();
         }
 
         public async Task<List<ItemModel>> Fetch(string ID = null)
@@ -120,7 +122,6 @@ namespace Connection
 
         public async Task<List<ItemModel>> GetAllFolder(string siteId, string listId, string folderID = null)
         {
-            bool empty = true;
             List<ItemModel> itemsModel = new();
 
             if (string.IsNullOrEmpty(folderID))
@@ -129,24 +130,16 @@ namespace Connection
                 string responseContent = await responseMessage.Content.ReadAsStringAsync();
                 DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
-
-                if (root.Value != null)
-                {
-                    empty = false;
-
-                    foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
-                        itemsModel.Add(new()
-                        {
-                            ID = item.Id,
-                            Name = item.Name,
-                            WebUrl = item.WebUrl,
-                            Size = item.Size,
-                            Count = item.Folder?.ChildCount ?? 0,
-                            ShowDiv = true,
-                        });
-
-                    await Task.Delay(1000);
-                }
+                foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
+                    itemsModel.Add(new()
+                    {
+                        ID = item.Id,
+                        Name = item.Name,
+                        WebUrl = item.WebUrl,
+                        Size = item.Size,
+                        Count = item.Folder?.ChildCount ?? 0,
+                        ShowDiv = true,
+                    });
             }
             else
             {
@@ -154,21 +147,16 @@ namespace Connection
                 string responseContent = await responseMessage.Content.ReadAsStringAsync();
                 DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
-                if (root.Value != null)
-                {
-                    foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
-                        itemsModel.Add(new()
-                        {
-                            ID = item.Id,
-                            Name = item.Name,
-                            WebUrl = item.WebUrl,
-                            Size = item.Size,
-                            Count = item.Folder?.ChildCount ?? 0,
-                            ShowDiv = true,
-                        });
-
-                    await Task.Delay(1000);
-                }
+                foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
+                    itemsModel.Add(new()
+                    {
+                        ID = item.Id,
+                        Name = item.Name,
+                        WebUrl = item.WebUrl,
+                        Size = item.Size,
+                        Count = item.Folder?.ChildCount ?? 0,
+                        ShowDiv = true,
+                    });
             }
 
             return itemsModel.OrderBy(key => key.Name).ToList();
