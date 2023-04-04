@@ -49,6 +49,12 @@ public partial class Index
             Url += $"/{Site.ID}/{Site.ListID}";
         }
 
+        if (Items == null)
+        {
+            await JS.InvokeVoidAsync("Return");
+            return;
+        }
+
         TempItems = Items;
 
         TotalSize = Items.Sum(x => x.Size);
@@ -62,7 +68,7 @@ public partial class Index
         else
             DisplayTotalSize = $"({(TotalSize / ((1024.0 * 1024.0 * 1024.0)))?.ToString("0.00")}) GB";
 
-        this.StateHasChanged();
+        StateHasChanged();
     }
 
     public async Task Search(ChangeEventArgs e)

@@ -27,27 +27,21 @@ namespace Connection
 
         private readonly GraphServiceClient _microsoft;
 
-        private string _token { get; set; }
+        private string Token => AuthProvider.GetToken(new TokenRequestContext(scopes)).Token;
 
-        private void RefreshToken()
-        {
-            _token = AuthProvider.GetToken(new TokenRequestContext(scopes)).Token;
-        }
+        //private void RefreshToken()
+        //{
+        //    _token = AuthProvider.GetToken(new TokenRequestContext(scopes)).Token;
+        //}
 
         private async Task<HttpResponseMessage> GetData(string url)
         {
             using HttpClient client = new();
 
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
             client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true, NoStore = true };
 
             HttpResponseMessage responseMessage = await client.GetAsync($"{url}?v={Guid.NewGuid()}");
-
-            if (responseMessage.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                RefreshToken();
-                return await GetData(url);
-            }
 
             return responseMessage;
         }
@@ -56,16 +50,10 @@ namespace Connection
         {
             using HttpClient client = new();
 
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", Token);
             client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true, NoStore = true };
 
             HttpResponseMessage responseMessage = await client.DeleteAsync(url);
-
-            if (responseMessage.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                RefreshToken();
-                return await DeleteData(url);
-            }
 
             return responseMessage;
         }
@@ -80,8 +68,6 @@ namespace Connection
             AuthProvider = new(tenantId, appID, appSecret, options);
 
             _microsoft = new GraphServiceClient(AuthProvider, scopes);
-
-            RefreshToken();
         }
 
         public async Task<List<ItemModel>> Fetch(string ID = null)
@@ -120,7 +106,7 @@ namespace Connection
             }
         }
 
-        public async Task<List<ItemModel>> GetAllFolder(string siteId, string listId, string folderID = null)
+        public async Task<List<ItemModel>?> GetAllFolder(string siteId, string listId, string folderID = null)
         {
             List<ItemModel> itemsModel = new();
 
@@ -129,6 +115,9 @@ namespace Connection
                 HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/root/children");
                 string responseContent = await responseMessage.Content.ReadAsStringAsync();
                 DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
+
+                if (root.Value == null)
+                    return null;
 
                 foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
                     itemsModel.Add(new()
@@ -146,6 +135,9 @@ namespace Connection
                 HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderID}')/children");
                 string responseContent = await responseMessage.Content.ReadAsStringAsync();
                 DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
+
+                if (root.Value == null)
+                    return null;
 
                 foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
                     itemsModel.Add(new()
