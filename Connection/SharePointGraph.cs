@@ -22,10 +22,17 @@ namespace Connection
     public class SharePointGraph
     {
         private readonly string[] scopes = new string[] { "https://graph.microsoft.com/.default" };
+        private FileShare _FileShare { get; set; }
+        private ClientSecretCredential AuthProvider { get; set; }
 
         private readonly GraphServiceClient _microsoft;
 
         private string _token { get; set; }
+
+        private void RefreshToken()
+        {
+            _token = AuthProvider.GetToken(new TokenRequestContext(scopes)).Token;
+        }
 
         private async Task<HttpResponseMessage> GetData(string url)
         {
@@ -34,7 +41,15 @@ namespace Connection
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
             client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true, NoStore = true };
 
-            return await client.GetAsync($"{url}?v={Guid.NewGuid()}");
+            HttpResponseMessage responseMessage = await client.GetAsync($"{url}?v={Guid.NewGuid()}");
+
+            if (responseMessage.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                RefreshToken();
+                return await GetData(url);
+            }
+
+            return responseMessage;
         }
 
         private async Task<HttpResponseMessage> DeleteData(string url)
@@ -44,27 +59,27 @@ namespace Connection
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
             client.DefaultRequestHeaders.CacheControl = new CacheControlHeaderValue { NoCache = true, NoStore = true };
 
-            return await client.DeleteAsync(url);
+            HttpResponseMessage responseMessage = await client.DeleteAsync(url);
+
+            if (responseMessage.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                RefreshToken();
+                return await DeleteData(url);
+            }
+
+            return responseMessage;
         }
 
-        private FileShare _FileShare { get; set; }
 
-        public SharePointGraph(string appID, string tenantID, string appSecret, FileShare fileShare)
+        public SharePointGraph(string appID, string tenantId, string appSecret, FileShare fileShare)
         {
-            var options = new TokenCredentialOptions
-            {
-                AuthorityHost = AzureAuthorityHosts.AzurePublicCloud
-            };
-
-            ClientSecretCredential authProvider = new(tenantID, appID, appSecret, options);
-
-            _microsoft = new GraphServiceClient(authProvider, scopes);
-
-            _token = authProvider.GetToken(new TokenRequestContext(scopes)).Token;
-
-
-
             _FileShare = fileShare;
+
+            TokenCredentialOptions options = new() { AuthorityHost = AzureAuthorityHosts.AzurePublicCloud };
+
+            AuthProvider = new(tenantId, appID, appSecret, options);
+
+            _microsoft = new GraphServiceClient(AuthProvider, scopes);
         }
 
         public async Task<List<ItemModel>> Fetch(string ID = null)
@@ -105,70 +120,58 @@ namespace Connection
 
         public async Task<List<ItemModel>> GetAllFolder(string siteId, string listId, string folderID = null)
         {
-            try
+            bool empty = true;
+            List<ItemModel> itemsModel = new();
+
+            if (string.IsNullOrEmpty(folderID))
             {
-                bool empty = true;
-                List<ItemModel> itemsModel = new();
+                HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/root/children");
+                string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
 
-                if (string.IsNullOrEmpty(folderID))
+
+                if (root.Value != null)
                 {
-                    do
-                    {
-                        HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/root/children");
-                        string responseContent = await responseMessage.Content.ReadAsStringAsync();
-                        DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
+                    empty = false;
 
-
-                        if (root.Value != null)
+                    foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
+                        itemsModel.Add(new()
                         {
-                            empty = false;
+                            ID = item.Id,
+                            Name = item.Name,
+                            WebUrl = item.WebUrl,
+                            Size = item.Size,
+                            Count = item.Folder?.ChildCount ?? 0,
+                            ShowDiv = true,
+                        });
 
-                            foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
-                                itemsModel.Add(new()
-                                {
-                                    ID = item.Id,
-                                    Name = item.Name,
-                                    WebUrl = item.WebUrl,
-                                    Size = item.Size,
-                                    Count = item.Folder?.ChildCount ?? 0,
-                                    ShowDiv = true,
-                                });
-
-                            await Task.Delay(1000);
-                        }
-
-                    } while (empty);
+                    await Task.Delay(1000);
                 }
-                else
-                {
-                    HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderID}')/children");
-                    string responseContent = await responseMessage.Content.ReadAsStringAsync();
-                    DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
-
-                    if (root.Value != null)
-                    {
-                        foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
-                            itemsModel.Add(new()
-                            {
-                                ID = item.Id,
-                                Name = item.Name,
-                                WebUrl = item.WebUrl,
-                                Size = item.Size,
-                                Count = item.Folder?.ChildCount ?? 0,
-                                ShowDiv = true,
-                            });
-
-                        await Task.Delay(1000);
-                    }
-                }
-
-                return itemsModel.OrderBy(key => key.Name).ToList();
-
             }
-            catch (Exception ex)
+            else
             {
-                return new();
+                HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{folderID}')/children");
+                string responseContent = await responseMessage.Content.ReadAsStringAsync();
+                DriveModel root = JsonConvert.DeserializeObject<DriveModel>(responseContent)!;
+
+                if (root.Value != null)
+                {
+                    foreach (DriveModel.Values item in root.Value.Where(key => key.Size > 0))
+                        itemsModel.Add(new()
+                        {
+                            ID = item.Id,
+                            Name = item.Name,
+                            WebUrl = item.WebUrl,
+                            Size = item.Size,
+                            Count = item.Folder?.ChildCount ?? 0,
+                            ShowDiv = true,
+                        });
+
+                    await Task.Delay(1000);
+                }
             }
+
+            return itemsModel.OrderBy(key => key.Name).ToList();
         }
 
         public async Task<List<ItemModel>> GetAll(string name, string siteId, string listId, string fileId)
