@@ -195,7 +195,7 @@ namespace Connection
             return items.OrderBy(key => key.Name).ToList();
         }
 
-        public async Task<ResultModel> SaveDelete(string siteId, string listId, ItemModel item, bool overwrite)
+        public async Task<ResultModel> SaveDelete(string siteId, string listId, ItemModel item, string fileExisting)
         {
             try
             {
@@ -205,7 +205,8 @@ namespace Connection
                     return new()
                     {
                         Success = true,
-                        Status = StatusModel.Skip
+                        Status = StatusModel.Skip,
+                        File=FileExistingModel.Skip
                     };
 
                 HttpResponseMessage responseMessage = await GetData($"https://graph.microsoft.com/v1.0/sites('{siteId}')/lists('{listId}')/drive/items('{item.ID}')");
@@ -219,9 +220,9 @@ namespace Connection
                     Name = item.Name
                 };
 
-                ResultModel result = await _FileShare.AddFile(fileModel, overwrite);
+                ResultModel result = await _FileShare.AddFile(fileModel, fileExisting);
 
-                if (result.Success)
+                if (result.File!=FileExistingModel.Skip)
                 {
                     int deleteTryCount = 3;
 

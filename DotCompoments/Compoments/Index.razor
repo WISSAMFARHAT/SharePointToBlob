@@ -9,10 +9,13 @@
 
                 @if (!string.IsNullOrEmpty(Site.FolderID))
                 {
-                    <label style="cursor:pointer">
-                        Overwrite:
-                        <input type="checkbox" @bind="Overwrite" style="appearance:auto;cursor:pointer">
-                    </label>
+                    <select @bind="FileExisting">
+                        @foreach (var fruit in Enum.GetValues(typeof(FileExistingModel)))
+                        {
+                            <option value="@fruit">@fruit</option>
+                        }
+                    </select>
+                  
                     <button @onclick="Archive" class="--button _secondary"><span>Archive</span> <span>@DisplayTotalSize</span></button>
                 }
             </div>

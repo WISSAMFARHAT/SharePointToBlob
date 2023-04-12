@@ -73,6 +73,13 @@ body main .sites-button {
 body main .sites-button button {
   max-width: 200px;
 }
+body main .sites-button select {
+  padding: 5px;
+  width: fit-content;
+  border-color: var(--secondaryColor);
+  color: var(--blackColor);
+  appearance: auto;
+}
 body main .loading {
   width: 100vw;
   height: 80vh;

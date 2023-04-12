@@ -21,7 +21,7 @@ namespace Connection
             ShareContainerClient.CreateIfNotExists();
         }
 
-        public async Task<ResultModel> AddFile(FileModel file, bool overrideCheck)
+        public async Task<ResultModel> AddFile(FileModel file, string fileExisting)
         {
             try
             {
@@ -50,18 +50,28 @@ namespace Connection
 
                 ShareFileClient fileClient = parrantDirectory.GetFileClient(filename);
 
-                if (await fileClient.ExistsAsync())
-                {
-                    if (!overrideCheck)
-                        return new()
-                        {
-                            Success = false,
-                            Status=StatusModel.Skip,
-                            Error= "override"
-                        };
+                if (fileExisting == FileExistingModel.Remove.ToString())
+                    return new()
+                    {
+                        Success = true,
+                        Status = StatusModel.Succeed,
+                        File = FileExistingModel.Remove,
+                        Error = "remove"
+                    };
 
+                if (fileExisting == FileExistingModel.Skip.ToString())
+                    return new()
+                    {
+                        Success = false,
+                        Status = StatusModel.Skip,
+                        File = FileExistingModel.Skip,
+                        Error = "skip"
+                    };
+
+
+                if (await fileClient.ExistsAsync())
                     await fileClient.DeleteAsync();
-                }
+
 
                 await fileClient.CreateAsync(file.FileLength);
                 var result = await fileClient.StartCopyAsync(new Uri(file.FileUrl));
@@ -80,15 +90,18 @@ namespace Connection
                 if (destinationProperties.CopyStatus != CopyStatus.Success)
                     return new()
                     {
-                        Success=false,
-                        Status=StatusModel.Failed,
+                        Success = false,
+                        Status = StatusModel.Failed,
+                        File = FileExistingModel.Skip,
                         Error = "Failed Task"
                     };
 
                 return new()
                 {
-                    Success=true,
-                    Status=StatusModel.Succeed,
+                    Success = true,
+                    Status = StatusModel.Succeed,
+                    File = FileExistingModel.Override,
+
                 };
 
             }

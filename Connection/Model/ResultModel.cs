@@ -7,6 +7,8 @@ public class ResultModel
     public string? Error { get; set; }
 
     public StatusModel? Status { get; set; }
+
+    public FileExistingModel? File { get; set; }
    
 }
 

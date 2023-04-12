@@ -11,6 +11,7 @@ public partial class Index
     public List<ItemModel>? TempItems { get; set; }
     public bool Loading { get; set; } = false;
     public bool Overwrite { get; set; } = false;
+    public string FileExisting { get; set; } = FileExistingModel.Override.ToString();
     public int TotalFile { get; set; } = 0;
     public string? DisplayTotalSize { get; set; }
     public string ProgressTitle => Finalizing ? "Finalizing" : (TotalFile == 0 ? "Gathering files" : $"{FileCount}/{TotalFile} ({TransferTasks.Count(key => !key.IsCompleted)} running tasks)");
@@ -85,8 +86,10 @@ public partial class Index
 
     public async Task Archive()
     {
+
         try
         {
+
             List<ItemModel> allfiles = new()
                 {
                     new ItemModel
@@ -116,7 +119,7 @@ public partial class Index
             {
                 TransferTasks.Add(Task.Run(async () =>
                 {
-                    ResultModel transfered = await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, Overwrite);
+                    ResultModel transfered = await _sharePointGraph.SaveDelete(Site.ID, Site.ListID, file, FileExisting);
 
                     if (!transfered.Success)
                         TransferFailedFiles.Add($"{file.Name} [{file.DisplaySize}] | {transfered.Error} [{transfered.Status}]");
@@ -149,10 +152,15 @@ public partial class Index
 
             List<ItemModel> folders = allfiles.Where(x => !string.IsNullOrEmpty(x.FolderID)).ToList();
 
-            while (folders.Any(key => !key.IsDeleted))
+            int deleteTryCount = 3;
+            while (folders.Any(key => !key.IsDeleted) && deleteTryCount >= 0)
+            {
+                deleteTryCount--;
+
                 foreach (ItemModel file in folders.Where(key => !key.IsDeleted))
                     try { file.IsDeleted = await _sharePointGraph.DeleteSubFolderEmpty(Site.ID, Site.ListID, file.FolderID); }
                     catch { }
+            }
 
             Loading = false;
             StateHasChanged();
