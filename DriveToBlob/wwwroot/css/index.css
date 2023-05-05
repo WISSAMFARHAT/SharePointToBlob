@@ -62,6 +62,24 @@ body main .sites-info-message > p {
 body main .sites-info-message._block {
   display: block !important;
 }
+body main .sites-info-filter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+body main .sites-info-filter span {
+  font-size: 1rem;
+  color: var(--blackColor);
+}
+body main .sites-info-filter select {
+  padding: 5px;
+  background-color: transparent;
+  min-width: 100px;
+  text-align: center;
+  appearance: auto;
+  cursor: pointer;
+}
 body main .sites-button {
   width: 100%;
   display: flex;

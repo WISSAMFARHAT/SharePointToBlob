@@ -59,7 +59,28 @@ body {
                         display: block !important;
                     }
                 }
+
+                &-filter {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-start;
+                    gap:10px;
+                    span {
+                        font-size: 1rem;
+                        color: var(--blackColor);
+                    }
+
+                    select {
+                        padding: 5px;
+                        background-color: transparent;
+                        min-width: 100px;
+                        text-align:center;
+                        appearance:auto;
+                        cursor:pointer;
+                    }
+                }
             }
+
 
             &-button {
                 width: 100%;
@@ -73,12 +94,12 @@ body {
                     max-width: 200px;
                 }
 
-                select{
-                    padding:5px;
-                    width:fit-content;
-                    border-color:var(--secondaryColor);
-                    color:var(--blackColor);
-                    appearance:auto;
+                select {
+                    padding: 5px;
+                    width: fit-content;
+                    border-color: var(--secondaryColor);
+                    color: var(--blackColor);
+                    appearance: auto;
                 }
             }
         }

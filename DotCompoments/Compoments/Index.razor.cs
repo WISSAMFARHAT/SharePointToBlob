@@ -20,6 +20,7 @@ public partial class Index
     public long? TotalSize { get; set; } = 0;
     public int FileCount { get; set; } = 0;
     public int Percentage { get; set; } = 0;
+    public string Filter { get; set; } = "name";
     public List<string> TransferFailedFiles { get; set; } = new();
     public string Url { get; set; } = $"";
     public string? ErrorDescription { get; set; }

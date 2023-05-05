@@ -25,13 +25,22 @@
                 <div class="sites-info-search">
                     <input type="text" placeholder="Search by Name..." @oninput="Search" />
                 </div>
-
+                @if(TempItems.Where(x=>x.Size>0).Any())
+                {
+                    <div class="sites-info-filter">
+                        <span>Sort by : </span>
+                        <select @bind="Filter">
+                            <option selected value="name">Name</option>
+                            <option value="size">Size</option>
+                        </select>
+                    </div>
+                }
                 <div class="sites-info-message" id="message">
                     <p>Task completed</p>
                 </div>
 
                 <div class="sites-info-description">
-                    @foreach (ItemModel item in TempItems)
+                    @foreach (ItemModel item in (Filter.Equals("name", StringComparison.OrdinalIgnoreCase) ? TempItems.OrderBy(x => x.Name) : TempItems.OrderBy(x => x.Size)))
                     {
                         @if (!string.IsNullOrEmpty(item.Name))
                         {
